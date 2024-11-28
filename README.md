@@ -1,3 +1,3 @@
 Co-working
 Teamleden: Arda, Bunyamin, Lars, Mattis, Mylan
-https://discord.gg/827m5Sxb
+Discord: https://discord.gg/827m5Sxb
