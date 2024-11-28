@@ -1,2 +1,2 @@
 Co-working
-Teamleden: Arda, Bunyamin, Lars, Mattis, Milan
+Teamleden: Arda, Bunyamin, Lars, Mattis, Mylan
