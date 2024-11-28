@@ -52,7 +52,7 @@ const UploadPage = () => {
           <div className="flex flex-col">
             <label className="text-lg font-medium mb-2">Latitude:</label>
             <input
-              type="number"
+              type="text"
               step="any"
               value={latitude}
               onChange={(e) => setLatitude(e.target.value)}
@@ -63,7 +63,7 @@ const UploadPage = () => {
           <div className="flex flex-col">
             <label className="text-lg font-medium mb-2">Longitude:</label>
             <input
-              type="number"
+              type="text"
               step="any"
               value={longitude}
               onChange={(e) => setLongitude(e.target.value)}
