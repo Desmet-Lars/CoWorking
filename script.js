@@ -1,14 +1,14 @@
 // Pop-up logica
 function closePopup() {
     document.querySelector('.popup').style.display = 'none';
-    document.cookie = "popup_seen=true; path=/; max-age=" + 60 * 60 * 24; // 1 dag
+    document.cookie = "popup_seen=true; path=/; max-age=" + 60 * 60 * 24;
 }
 
 if (!document.cookie.includes("popup_seen=true")) {
     document.querySelector('.popup').style.display = 'block';
 }
 
-var map = L.map('mapContainer').setView([51.05, 3.72], 13); // Voor Gent
+var map = L.map('mapContainer').setView([51.05, 3.72], 13);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
 // Weer-API
