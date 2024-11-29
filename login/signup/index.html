@@ -12,7 +12,8 @@
     <header class="site-header">
         <div class="header-content">
             <h1>BucketMap</h1>
-            <nav>
+            <button id="menuToggle" class="menu-toggle">☰</button>
+            <nav id="mainNav" class="nav-closed">
                 <ul>
                     <li><a href="../../">Home</a></li>
                     <li><a href="../../map">Buckmap</a></li>
@@ -39,7 +40,7 @@
                     <label for="confirmPassword">Confirm Password:</label>
                     <input type="password" id="confirmPassword" required>
                 </div>
-                <button type="submit">Sign Up</button>
+                <button class="singup-button" type="submit">Sign Up</button>
             </form>
             <p>Already have an account? <a href="../">Login</a></p>
         </div>
@@ -80,6 +81,11 @@
                 alert(error.message);
             }
         });
+
+        document.getElementById('menuToggle').addEventListener('click', () => {
+            const nav = document.getElementById('mainNav');
+            nav.classList.toggle('nav-closed');
+        });
     </script>
 
     <style>
@@ -102,13 +108,13 @@
             padding: 1rem 0;
             position: sticky;
             top: 0;
-            z-index: 100;
+            z-index: 1000;
         }
 
         .header-content {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 0 2rem;
+            padding: 0 1rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -117,6 +123,18 @@
         .site-header h1 {
             color: #2563eb;
             font-weight: 600;
+            font-size: 1.5rem;
+        }
+
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            color: #4b5563;
+            margin-left: auto;
         }
 
         nav ul {
@@ -132,8 +150,43 @@
             transition: color 0.2s;
         }
 
-        nav a:hover, nav a.active {
+        nav a:hover {
             color: #2563eb;
+        }
+
+        @media (max-width: 768px) {
+            .menu-toggle {
+                display: block;
+            }
+
+            nav {
+                position: fixed;
+                top: 70px;
+                left: 0;
+                right: 0;
+                background: white;
+                padding: 1rem;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                transition: transform 0.3s ease;
+                height: calc(100vh - 70px);
+                overflow-y: auto;
+            }
+
+            nav.nav-closed {
+                transform: translateX(-100%);
+            }
+
+            nav ul {
+                flex-direction: column;
+                gap: 1.5rem;
+                padding: 1rem;
+            }
+
+            nav a {
+                display: block;
+                padding: 0.5rem;
+                font-size: 1.2rem;
+            }
         }
 
         .login-container {
@@ -181,7 +234,7 @@
             box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
         }
 
-        button {
+        .singup-button {
             width: 100%;
             padding: 0.875rem;
             background-color: #2563eb;
@@ -194,11 +247,11 @@
             transition: background-color 0.2s;
         }
 
-        button:hover {
+        .singup-button:hover {
             background-color: #1d4ed8;
         }
 
-        button:active {
+        .singup-button:active {
             transform: translateY(1px);
         }
 
