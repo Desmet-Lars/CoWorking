@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BucketMap - Map</title>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body>
+    <header class="site-header">
+        <div class="header-content">
+            <h1>BucketMap</h1>
+            <nav>
+                <ul>
+                    <li><a href="../">Home</a></li>
+                    <li><a href="../map">Buckmap</a></li>
+                    <li><a href="../aboutus">About Us</a></li>
+                    <li><a href="../contactpage">Contact Page</a></li>
+                    <li><a href="../login" id="loginLink">Login</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="controls">
+            <div class="filter-section">
+                <h3>Filters</h3>
+                <div class="filter-options">
+                    <label>
+                        <input type="checkbox" id="showBucketlist" checked>
+                        Show Bucketlist Items
+                    </label>
+                    <label>
+                        <input type="checkbox" id="showVisited" checked>
+                        Show Visited Places
+                    </label>
+                </div>
+            </div>
+            <div class="bucketlist-section">
+                <h3>My Bucketlist</h3>
+                <div id="bucketlistItems" class="bucketlist-items">
+                    <!-- Bucketlist items will be populated here -->
+                </div>
+            </div>
+        </div>
+        <div id="map"></div>
+    </main>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyChQQiUKzxdvITadpBhMM4rryaNL4hLNaY",
+            authDomain: "buckmap-83956.firebaseapp.com",
+            projectId: "buckmap-83956",
+            storageBucket: "buckmap-83956.firebasestorage.app",
+            messagingSenderId: "809697568507",
+            appId: "1:809697568507:web:b2e70b0f7a04837063f25e",
+            measurementId: "G-4JD9LL21HT"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        let map;
+        let markers = [];
+
+        // Check authentication state
+        firebase.auth().onAuthStateChanged((user) => {
+            if (user) {
+                document.getElementById('loginLink').textContent = 'Logout';
+                document.getElementById('loginLink').addEventListener('click', (e) => {
+                    e.preventDefault();
+                    firebase.auth().signOut();
+                });
+                loadMap();
+                setupFilters();
+            } else {
+                window.location.href = '../login';
+            }
+        });
+
+        function loadMap() {
+            map = L.map('map').setView([0, 0], 2);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            loadLocations();
+        }
+
+        function loadLocations() {
+            // Clear existing markers
+            markers.forEach(marker => marker.remove());
+            markers = [];
+
+            const showBucketlist = document.getElementById('showBucketlist').checked;
+            const showVisited = document.getElementById('showVisited').checked;
+
+            // Fetch locations from Firestore
+            db.collection('locations').get().then((querySnapshot) => {
+                const bucketlistContainer = document.getElementById('bucketlistItems');
+                bucketlistContainer.innerHTML = ''; // Clear existing items
+
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const isVisited = data.visited || false;
+
+                    if ((showBucketlist && !isVisited) || (showVisited && isVisited)) {
+                        const marker = L.marker([data.latitude, data.longitude]).addTo(map);
+                        markers.push(marker);
+
+                        marker.bindPopup(`
+                            <h3>${data.name}</h3>
+                            <img src="${data.imageUrl}" alt="${data.name}" style="width:200px">
+                            <p>${isVisited ? 'Visited' : 'On Bucketlist'}</p>
+                            <button onclick="toggleVisited('${doc.id}', ${!isVisited})">
+                                Mark as ${isVisited ? 'Not Visited' : 'Visited'}
+                            </button>
+                        `);
+
+                        // Add to bucketlist sidebar
+                        const itemDiv = document.createElement('div');
+                        itemDiv.className = `bucketlist-item ${isVisited ? 'visited' : ''}`;
+                        itemDiv.innerHTML = `
+                            <span>${data.name}</span>
+                            <button onclick="toggleVisited('${doc.id}', ${!isVisited})">
+                                ${isVisited ? '✓' : '○'}
+                            </button>
+                        `;
+                        bucketlistContainer.appendChild(itemDiv);
+                    }
+                });
+            }).catch((error) => {
+                console.error("Error fetching locations:", error);
+            });
+        }
+
+        function setupFilters() {
+            document.getElementById('showBucketlist').addEventListener('change', loadLocations);
+            document.getElementById('showVisited').addEventListener('change', loadLocations);
+        }
+
+        async function toggleVisited(docId, visited) {
+            try {
+                await db.collection('locations').doc(docId).update({
+                    visited: visited
+                });
+                loadLocations(); // Reload the map and list
+            } catch (error) {
+                console.error("Error updating location:", error);
+            }
+        }
+    </script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .site-header {
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .site-header h1 {
+            color: #2563eb;
+            font-weight: 600;
+        }
+
+        nav ul {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: #4b5563;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        nav a:hover {
+            color: #2563eb;
+        }
+
+        main {
+            display: flex;
+            height: calc(100vh - 70px);
+        }
+
+        .controls {
+            width: 300px;
+            background: white;
+            padding: 1rem;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            overflow-y: auto;
+        }
+
+        .filter-section, .bucketlist-section {
+            margin-bottom: 2rem;
+        }
+
+        .filter-section h3, .bucketlist-section h3 {
+            margin-bottom: 1rem;
+            color: #2563eb;
+        }
+
+        .filter-options {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .filter-options label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+        }
+
+        .bucketlist-items {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .bucketlist-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+
+        .bucketlist-item.visited {
+            background: #e8f5e9;
+        }
+
+        .bucketlist-item button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+
+        #map {
+            flex-grow: 1;
+            height: 100%;
+        }
+    </style>
+</body>
+</html>
