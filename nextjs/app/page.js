@@ -36,8 +36,8 @@ const UploadPage = () => {
       try {
         const locationData = {
           name: name.trim(),
-          latitude: Number(lat),
-          longitude: Number(lng),
+          latitude: Number(lat.toFixed(6)),
+          longitude: Number(lng.toFixed(6)),
           imageUrl: imageUrl.trim(),
           timestamp: new Date(),
         };
