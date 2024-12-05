@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,7 +12,9 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="spinner.css">
 </head>
+
 <body>
     <header class="site-header">
         <div class="header-content">
@@ -47,9 +50,11 @@
             </div>
             <div class="bucketlist-section">
                 <h3>My Bucketlist</h3>
-                <div id="bucketlistItems" class="bucketlist-items">
-                    <!-- Bucketlist items will be populated here -->
+                <div class="search-container">
+                    <input type="text" id="bucketlistSearch" placeholder="Search locations..."
+                        class="bucketlist-search">
                 </div>
+                <div id="bucketlistItems" class="bucketlist-items"></div>
             </div>
         </div>
         <div id="map"></div>
@@ -70,23 +75,26 @@
         const db = firebase.firestore();
         let map;
         let markers = [];
+        let allLocations = [];
 
-        // Mobile menu toggle
         document.getElementById('menuToggle').addEventListener('click', () => {
             const nav = document.getElementById('mainNav');
             nav.classList.toggle('nav-closed');
+            document.body.classList.toggle('nav-open', !nav.classList.contains('nav-closed'));
+            const zoomControls = document.querySelector('.leaflet-control-zoom');
+            if (zoomControls) {
+                zoomControls.style.display = nav.classList.contains('nav-closed') ? 'block' : 'none';
+                zoomControls.style.visibility = nav.classList.contains('nav-closed') ? 'visible' : 'hidden';
+            }
         });
 
-        // Controls toggle
         document.getElementById('controlsToggle').addEventListener('click', () => {
             const controls = document.getElementById('controls');
             const button = document.getElementById('controlsToggle');
             controls.classList.toggle('controls-closed');
-            button.textContent = controls.classList.contains('controls-closed') ?
-                '☰ Show Controls' : '✕ Hide Controls';
+            button.textContent = controls.classList.contains('controls-closed') ? '☰ Show Controls' : '✕ Hide Controls';
         });
 
-        // Check authentication state
         firebase.auth().onAuthStateChanged((user) => {
             if (user) {
                 document.getElementById('loginLink').textContent = 'Logout';
@@ -102,11 +110,19 @@
         });
 
         function loadMap() {
-            map = L.map('map').setView([0, 0], 2);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors'
+            map = L.map('map', {
+                zoomControl: false,
+                minZoom: 2,
+                maxBounds: [[-90, -180], [90, 180]]
+            }).setView([20, 0], 3);
+
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                attribution: '©OpenStreetMap, ©CartoDB',
+                subdomains: 'abcd',
+                maxZoom: 19
             }).addTo(map);
 
+            L.control.zoom({ position: 'topleft' }).addTo(map);
             loadLocations();
         }
 
@@ -117,8 +133,8 @@
             const showBucketlist = document.getElementById('showBucketlist').checked;
             const showVisited = document.getElementById('showVisited').checked;
             const userId = firebase.auth().currentUser.uid;
+            const searchQuery = document.getElementById('bucketlistSearch').value.toLowerCase();
 
-            // First, get the user's visited locations
             db.collection('userVisits')
                 .where('userId', '==', userId)
                 .get()
@@ -128,39 +144,83 @@
                         visitedLocations.set(visit.data().locationId, visit.id);
                     });
 
-                    // Then load all locations
                     return db.collection('locations').get().then((querySnapshot) => {
                         const bucketlistContainer = document.getElementById('bucketlistItems');
                         bucketlistContainer.innerHTML = '';
+                        allLocations = [];
 
                         querySnapshot.forEach((doc) => {
                             const data = doc.data();
                             const isVisited = visitedLocations.has(doc.id);
 
-                            if ((showBucketlist && !isVisited) || (showVisited && isVisited)) {
-                                const marker = L.marker([data.latitude, data.longitude]).addTo(map);
+                            allLocations.push({
+                                id: doc.id,
+                                name: data.name,
+                                isVisited: isVisited,
+                                data: data
+                            });
+                        });
+
+                        const filteredLocations = allLocations.filter(location =>
+                            location.name.toLowerCase().includes(searchQuery.toLowerCase())
+                        );
+
+                        filteredLocations.forEach(location => {
+                            const data = location.data;
+                            const isVisited = location.isVisited;
+                            const markerColor = isVisited ? 'green' : 'blue';
+
+                            if ((isVisited && showVisited) || (!isVisited && showBucketlist)) {
+                                const marker = L.circleMarker([data.latitude, data.longitude], {
+                                    color: markerColor,
+                                    radius: 8
+                                }).addTo(map);
                                 markers.push(marker);
 
+                                marker.on('click', function (e) {
+                                    const markerLatLng = e.target.getLatLng();
+                                    const mapContainer = map.getContainer();
+
+                                    const containerWidth = mapContainer.clientWidth;
+                                    const containerHeight = mapContainer.clientHeight;
+
+                                    const controlsWidth = document.getElementById('controls').classList.contains('controls-closed') ? 0 : 300;
+
+                                    const targetPoint = map.project(markerLatLng, map.getZoom());
+                                    const offsetX = (controlsWidth / 2) - (containerWidth / 2);
+                                    const offsetY = -(containerHeight / 2);
+
+                                    const newCenter = map.unproject([
+                                        targetPoint.x + offsetX,
+                                        targetPoint.y + offsetY
+                                    ], map.getZoom());
+
+                                    map.setView(newCenter, map.getZoom(), {
+                                        animate: true,
+                                        duration: 0.5
+                                    });
+                                });
+
                                 marker.bindPopup(`
-                                    <div class="marker-popup">
-                                        <h3 class="popup-title">${data.name}</h3>
-                                        <div class="popup-image-container">
-                                            <img src="${data.imageUrl}" alt="${data.name}">
-                                        </div>
-                                        <p class="popup-status ${isVisited ? 'visited' : 'bucketlist'}">
-                                            ${isVisited ? '✓ Visited' : '○ On Bucketlist'}
-                                        </p>
-                                        <button class="popup-button" onclick="toggleVisited('${doc.id}', ${!isVisited})">
-                                            Mark as ${isVisited ? 'Not Visited' : 'Visited'}
-                                        </button>
-                                    </div>
-                                `);
+        <div class="marker-popup">
+            <h3 class="popup-title">${data.name}</h3>
+            <div class="popup-image-container">
+                <img src="${data.imageUrl}" alt="${data.name}">
+            </div>
+            <p class="popup-status ${isVisited ? 'visited' : 'bucketlist'}">
+                ${isVisited ? '✓ Visited' : '○ On Bucketlist'}
+            </p>
+            <button class="popup-button" onclick="toggleVisited('${location.id}', ${!isVisited})">
+                Mark as ${isVisited ? 'Not Visited' : 'Visited'}
+            </button>
+        </div>
+    `);
 
                                 const itemDiv = document.createElement('div');
                                 itemDiv.className = `bucketlist-item ${isVisited ? 'visited' : ''}`;
                                 itemDiv.innerHTML = `
                                     <span>${data.name}</span>
-                                    <button onclick="toggleVisited('${doc.id}', ${!isVisited})">
+                                    <button onclick="toggleVisited('${location.id}', ${!isVisited})">
                                         ${isVisited ? '✓' : '○'}
                                     </button>
                                 `;
@@ -176,6 +236,8 @@
         function setupFilters() {
             document.getElementById('showBucketlist').addEventListener('change', loadLocations);
             document.getElementById('showVisited').addEventListener('change', loadLocations);
+
+            document.getElementById('bucketlistSearch').addEventListener('input', loadLocations);
         }
 
         async function toggleVisited(locationId, visited) {
@@ -184,14 +246,12 @@
                 const userVisitsRef = db.collection('userVisits');
 
                 if (visited) {
-                    // Add to visited locations
                     await userVisitsRef.add({
                         userId: userId,
                         locationId: locationId,
                         visitedAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
                 } else {
-                    // Remove from visited locations
                     const visitQuery = await userVisitsRef
                         .where('userId', '==', userId)
                         .where('locationId', '==', locationId)
@@ -208,4 +268,5 @@
         }
     </script>
 </body>
+
 </html>

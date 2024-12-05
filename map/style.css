@@ -28,6 +28,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            z-index: 900;
         }
 
         .site-header h1 {
@@ -80,6 +81,8 @@
             border-radius: 4px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             cursor: pointer;
+            margin-top: 10px !important;
+            right: 20px !important;
         }
 
         .controls {
@@ -142,6 +145,7 @@
         #map {
             flex-grow: 1;
             height: 100%;
+            background-color: #f8f9fa;
         }
 
         @media (max-width: 768px) {
@@ -160,6 +164,7 @@
                 transition: transform 0.3s ease;
                 height: calc(100vh - 70px);
                 overflow-y: auto;
+                z-index: 900;
             }
 
             nav.nav-closed {
@@ -192,6 +197,20 @@
 
             .controls-closed {
                 transform: translateX(100%);
+            }
+
+            nav:not(.nav-closed) ~ main .leaflet-control-zoom {
+                display: none !important;
+            }
+
+            .leaflet-control-zoom {
+                display: block !important;
+                visibility: visible !important;
+            }
+
+            body.nav-open .leaflet-control-zoom {
+                display: none !important;
+                visibility: hidden !important;
             }
         }
 
@@ -264,6 +283,7 @@
             padding: 0;
             border-radius: 8px;
             overflow: hidden;
+            z-index: 800;
         }
 
         .leaflet-popup-content {
@@ -273,4 +293,80 @@
 
         .leaflet-popup-close-button {
             padding: 8px !important;
+        }
+
+        .leaflet-control-zoom {
+            margin-right: 60px !important;
+            margin-top: 20px !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+        }
+
+        .leaflet-control-zoom a {
+            width: 36px !important;
+            height: 36px !important;
+            line-height: 36px !important;
+            color: #2563eb !important;
+            font-size: 18px !important;
+            border: none !important;
+        }
+
+        .leaflet-control-zoom-in {
+            border-radius: 8px 8px 0 0 !important;
+        }
+
+        .leaflet-control-zoom-out {
+            border-radius: 0 0 8px 8px !important;
+        }
+
+        /* Custom map styling */
+        .leaflet-container {
+            font: inherit;
+        }
+
+        /* Enhance markers */
+        .leaflet-marker-icon {
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+        }
+
+        /* Make popup animations smoother */
+        .leaflet-fade-anim .leaflet-popup {
+            transition: opacity 0.2s linear;
+        }
+
+        /* Ensure the html and body take up the full height */
+        html, body {
+            height: 100%;
+            margin: 0;
+            overflow: hidden; /* Prevent scrolling */
+        }
+
+        /* Make sure the map container fills the available space */
+        #map {
+            height: calc(100vh - 60px); /* Adjust based on your header/footer height */
+            width: 100%;
+        }
+
+        /* Adjust the main content to fit within the viewport */
+        main {
+            height: calc(100vh - 60px); /* Adjust based on your header/footer height */
+            overflow: auto; /* Allow scrolling within the main content if needed */
+        }
+
+        .search-container {
+            margin-bottom: 1rem;
+            padding: 0 1rem;
+        }
+
+        .bucketlist-search {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 0.875rem;
+        }
+
+        .bucketlist-search:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
         }
