@@ -142,12 +142,18 @@
                                 markers.push(marker);
 
                                 marker.bindPopup(`
-                                    <h3>${data.name}</h3>
-                                    <img src="${data.imageUrl}" alt="${data.name}" style="width:100%;max-width:200px">
-                                    <p>${isVisited ? 'Visited' : 'On Bucketlist'}</p>
-                                    <button onclick="toggleVisited('${doc.id}', ${!isVisited})">
-                                        Mark as ${isVisited ? 'Not Visited' : 'Visited'}
-                                    </button>
+                                    <div class="marker-popup">
+                                        <h3 class="popup-title">${data.name}</h3>
+                                        <div class="popup-image-container">
+                                            <img src="${data.imageUrl}" alt="${data.name}">
+                                        </div>
+                                        <p class="popup-status ${isVisited ? 'visited' : 'bucketlist'}">
+                                            ${isVisited ? '✓ Visited' : '○ On Bucketlist'}
+                                        </p>
+                                        <button class="popup-button" onclick="toggleVisited('${doc.id}', ${!isVisited})">
+                                            Mark as ${isVisited ? 'Not Visited' : 'Visited'}
+                                        </button>
+                                    </div>
                                 `);
 
                                 const itemDiv = document.createElement('div');
