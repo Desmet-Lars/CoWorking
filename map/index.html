@@ -13,6 +13,9 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="spinner.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css">
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
 </head>
 
 <body>
@@ -130,6 +133,8 @@
             markers.forEach(marker => marker.remove());
             markers = [];
 
+            const markerClusterGroup = L.markerClusterGroup();
+
             const showBucketlist = document.getElementById('showBucketlist').checked;
             const showVisited = document.getElementById('showVisited').checked;
             const userId = firebase.auth().currentUser.uid;
@@ -174,7 +179,8 @@
                                 const marker = L.circleMarker([data.latitude, data.longitude], {
                                     color: markerColor,
                                     radius: 8
-                                }).addTo(map);
+                                });
+                                markerClusterGroup.addLayer(marker);
                                 markers.push(marker);
 
                                 marker.on('click', function (e) {
@@ -219,14 +225,42 @@
                                 const itemDiv = document.createElement('div');
                                 itemDiv.className = `bucketlist-item ${isVisited ? 'visited' : ''}`;
                                 itemDiv.innerHTML = `
-                                    <span>${data.name}</span>
+                                    <span class="location-name" data-lat="${data.latitude}" data-lng="${data.longitude}">${data.name}</span>
                                     <button onclick="toggleVisited('${location.id}', ${!isVisited})">
                                         ${isVisited ? '✓' : '○'}
                                     </button>
                                 `;
+
+                                const locationName = itemDiv.querySelector('.location-name');
+
+                                locationName.addEventListener('click', () => {
+                                    const lat = parseFloat(locationName.dataset.lat);
+                                    const lng = parseFloat(locationName.dataset.lng);
+
+                                    // Get current zoom level
+                                    const currentZoom = map.getZoom();
+
+                                    // First zoom out
+                                    map.setZoom(currentZoom - 2, {
+                                        animate: true,
+                                        duration: 0.75
+                                    });
+
+                                    // After zooming out, fly to location and zoom in
+                                    setTimeout(() => {
+                                        map.flyTo([lat, lng], 13, {
+                                            animate: true,
+                                            duration: 1.5,
+                                            easeLinearity: 0.25
+                                        });
+                                    });
+                                });
+
                                 bucketlistContainer.appendChild(itemDiv);
                             }
                         });
+
+                        map.addLayer(markerClusterGroup);
                     });
                 }).catch((error) => {
                     console.error("Error fetching locations:", error);
