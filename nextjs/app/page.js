@@ -16,10 +16,12 @@ const UploadPage = () => {
       setLoading(true);
       setMessage('');
 
-      const lat = parseFloat(latitude);
-      const lng = parseFloat(longitude);
+      const lat = Number(latitude);
+      const lng = Number(longitude);
 
-      console.log('Latitude:', lat, 'Longitude:', lng);
+      console.log('Original inputs:', latitude, longitude);
+      console.log('Parsed values:', lat, lng);
+      console.log('Type of lat:', typeof lat, 'Type of lng:', typeof lng);
 
       if (isNaN(lat) || isNaN(lng)) {
         setMessage('Error: Latitude and longitude must be valid numbers');
@@ -27,14 +29,24 @@ const UploadPage = () => {
         return;
       }
 
+      if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+        setMessage('Error: Invalid coordinate range. Latitude must be between -90 and 90, Longitude between -180 and 180');
+        setLoading(false);
+        return;
+      }
+
       try {
-        const docRef = await addDoc(collection(db, 'locations'), {
+        const locationData = {
           name: name.trim(),
-          latitude: lat,
-          longitude: lng,
+          latitude: Number(lat.toFixed(6)),
+          longitude: Number(lng.toFixed(6)),
           imageUrl: imageUrl.trim(),
           timestamp: new Date(),
-        });
+        };
+
+        console.log('Data being sent to Firestore:', locationData);
+
+        const docRef = await addDoc(collection(db, 'locations'), locationData);
 
         setName('');
         setLatitude('');
