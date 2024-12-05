@@ -10,7 +10,7 @@ const UploadPage = () => {
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState('');
     const [imageUrl, setImageUrl] = useState('');
-
+    console.log(latitude, longitude);
     const handleSubmit = async (e) => {
       e.preventDefault();
       setLoading(true);
