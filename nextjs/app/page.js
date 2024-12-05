@@ -15,17 +15,32 @@ const UploadPage = () => {
     const handleSubmit = async (e) => {
       e.preventDefault();
       setLoading(true);
+      setMessage('');
 
+      const lat = parseFloat(latitude);
+      const lng = parseFloat(longitude);
+
+      console.log('Latitude:', lat, 'Longitude:', lng);
+
+      if (isNaN(lat) || isNaN(lng)) {
+        setMessage('Error: Latitude and longitude must be valid numbers');
+        setLoading(false);
+        return;
+      }
 
       try {
         const docRef = await addDoc(collection(db, 'locations'), {
-          name: name,
-          latitude: parseFloat(latitude),
-          longitude: parseFloat(longitude),
-          imageUrl: imageUrl,
+          name: name.trim(),
+          latitude: lat,
+          longitude: lng,
+          imageUrl: imageUrl.trim(),
           timestamp: new Date(),
         });
 
+        setName('');
+        setLatitude('');
+        setLongitude('');
+        setImageUrl('');
         setMessage(`Data uploaded successfully! Document ID: ${docRef.id}`);
       } catch (error) {
         setMessage('Error uploading data: ' + error.message);
