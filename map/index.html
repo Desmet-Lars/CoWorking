@@ -74,46 +74,79 @@
             measurementId: "G-4JD9LL21HT"
         };
 
+        // State management
+        const state = {
+            map: null,
+            markerClusterGroup: null,
+            markers: new Map(), // Using Map for better marker tracking
+            allLocations: [],
+            currentUser: null
+        };
+
+        // Initialize app
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
-        let map;
-        let markers = [];
-        let allLocations = [];
 
-        document.getElementById('menuToggle').addEventListener('click', () => {
-            const nav = document.getElementById('mainNav');
-            nav.classList.toggle('nav-closed');
-            document.body.classList.toggle('nav-open', !nav.classList.contains('nav-closed'));
-            const zoomControls = document.querySelector('.leaflet-control-zoom');
-            if (zoomControls) {
-                zoomControls.style.display = nav.classList.contains('nav-closed') ? 'block' : 'none';
-                zoomControls.style.visibility = nav.classList.contains('nav-closed') ? 'visible' : 'hidden';
-            }
-        });
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', initializeApp);
 
-        document.getElementById('controlsToggle').addEventListener('click', () => {
-            const controls = document.getElementById('controls');
-            const button = document.getElementById('controlsToggle');
-            controls.classList.toggle('controls-closed');
-            button.textContent = controls.classList.contains('controls-closed') ? '☰ Show Controls' : '✕ Hide Controls';
-        });
+        function initializeApp() {
+            setupNavigationHandlers();
+            setupAuthStateObserver();
+        }
 
-        firebase.auth().onAuthStateChanged((user) => {
-            if (user) {
-                document.getElementById('loginLink').textContent = 'Logout';
-                document.getElementById('loginLink').addEventListener('click', (e) => {
-                    e.preventDefault();
-                    firebase.auth().signOut();
-                });
-                loadMap();
-                setupFilters();
-            } else {
-                window.location.href = '../login';
-            }
-        });
+        function setupNavigationHandlers() {
+            const menuToggle = document.getElementById('menuToggle');
+            const controlsToggle = document.getElementById('controlsToggle');
 
-        function loadMap() {
-            map = L.map('map', {
+            menuToggle?.addEventListener('click', () => {
+                const nav = document.getElementById('mainNav');
+                const zoomControls = document.querySelector('.leaflet-control-zoom');
+
+                nav?.classList.toggle('nav-closed');
+                document.body.classList.toggle('nav-open', !nav?.classList.contains('nav-closed'));
+
+                if (zoomControls) {
+                    const isNavClosed = nav?.classList.contains('nav-closed');
+                    zoomControls.style.display = isNavClosed ? 'block' : 'none';
+                    zoomControls.style.visibility = isNavClosed ? 'visible' : 'hidden';
+                }
+            });
+
+            controlsToggle?.addEventListener('click', () => {
+                const controls = document.getElementById('controls');
+                controls?.classList.toggle('controls-closed');
+                if (controlsToggle) {
+                    controlsToggle.textContent = controls?.classList.contains('controls-closed')
+                        ? '☰ Show Controls'
+                        : '✕ Hide Controls';
+                }
+            });
+        }
+
+        function setupAuthStateObserver() {
+            firebase.auth().onAuthStateChanged((user) => {
+                state.currentUser = user;
+                const loginLink = document.getElementById('loginLink');
+
+                if (user) {
+                    if (loginLink) {
+                        loginLink.textContent = 'Logout';
+                        loginLink.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            firebase.auth().signOut();
+                        });
+                    }
+                    initializeMap();
+                    setupFilters();
+                } else {
+                    window.location.href = '../login';
+                }
+            });
+        }
+
+        function initializeMap() {
+            state.map = L.map('map', {
                 zoomControl: false,
                 minZoom: 2,
                 maxBounds: [[-90, -180], [90, 180]]
@@ -123,181 +156,201 @@
                 attribution: '©OpenStreetMap, ©CartoDB',
                 subdomains: 'abcd',
                 maxZoom: 19
-            }).addTo(map);
+            }).addTo(state.map);
 
-            L.control.zoom({ position: 'topleft' }).addTo(map);
+            L.control.zoom({ position: 'topleft' }).addTo(state.map);
+            state.markerClusterGroup = L.markerClusterGroup();
             loadLocations();
         }
 
-        function loadLocations() {
-            markers.forEach(marker => marker.remove());
-            markers = [];
+        async function loadLocations() {
+            try {
+                if (!state.currentUser) return;
 
-            const markerClusterGroup = L.markerClusterGroup();
+                // Clear existing markers
+                state.markerClusterGroup.clearLayers();
+                state.markers.clear();
 
-            const showBucketlist = document.getElementById('showBucketlist').checked;
-            const showVisited = document.getElementById('showVisited').checked;
-            const userId = firebase.auth().currentUser.uid;
-            const searchQuery = document.getElementById('bucketlistSearch').value.toLowerCase();
+                const showBucketlist = document.getElementById('showBucketlist')?.checked ?? true;
+                const showVisited = document.getElementById('showVisited')?.checked ?? true;
+                const searchQuery = document.getElementById('bucketlistSearch')?.value.toLowerCase() ?? '';
 
-            db.collection('userVisits')
-                .where('userId', '==', userId)
-                .get()
-                .then((visitSnapshot) => {
-                    const visitedLocations = new Map();
-                    visitSnapshot.forEach((visit) => {
-                        visitedLocations.set(visit.data().locationId, visit.id);
-                    });
+                // Fetch visited locations
+                const visitSnapshot = await db.collection('userVisits')
+                    .where('userId', '==', state.currentUser.uid)
+                    .get();
 
-                    return db.collection('locations').get().then((querySnapshot) => {
-                        const bucketlistContainer = document.getElementById('bucketlistItems');
-                        bucketlistContainer.innerHTML = '';
-                        allLocations = [];
+                const visitedLocations = new Map(
+                    visitSnapshot.docs.map(doc => [doc.data().locationId, doc.id])
+                );
 
-                        querySnapshot.forEach((doc) => {
-                            const data = doc.data();
-                            const isVisited = visitedLocations.has(doc.id);
+                // Fetch all locations
+                const locationsSnapshot = await db.collection('locations').get();
+                state.allLocations = locationsSnapshot.docs.map(doc => ({
+                    id: doc.id,
+                    name: doc.data().name,
+                    isVisited: visitedLocations.has(doc.id),
+                    data: doc.data()
+                }));
 
-                            allLocations.push({
-                                id: doc.id,
-                                name: data.name,
-                                isVisited: isVisited,
-                                data: data
-                            });
-                        });
+                updateBucketlistUI(searchQuery, showBucketlist, showVisited, visitedLocations);
 
-                        const filteredLocations = allLocations.filter(location =>
-                            location.name.toLowerCase().includes(searchQuery.toLowerCase())
-                        );
+            } catch (error) {
+                console.error("Error loading locations:", error);
+                // Could add user-facing error notification here
+            }
+        }
 
-                        filteredLocations.forEach(location => {
-                            const data = location.data;
-                            const isVisited = location.isVisited;
-                            const markerColor = isVisited ? 'green' : 'blue';
+        function updateBucketlistUI(searchQuery, showBucketlist, showVisited, visitedLocations) {
+            const bucketlistContainer = document.getElementById('bucketlistItems');
+            if (!bucketlistContainer) return;
 
-                            if ((isVisited && showVisited) || (!isVisited && showBucketlist)) {
-                                const marker = L.circleMarker([data.latitude, data.longitude], {
-                                    color: markerColor,
-                                    radius: 8
-                                });
-                                markerClusterGroup.addLayer(marker);
-                                markers.push(marker);
+            bucketlistContainer.innerHTML = '';
 
-                                marker.on('click', function (e) {
-                                    const markerLatLng = e.target.getLatLng();
-                                    const mapContainer = map.getContainer();
+            const filteredLocations = state.allLocations.filter(location =>
+                location.name.toLowerCase().includes(searchQuery)
+            );
 
-                                    const containerWidth = mapContainer.clientWidth;
-                                    const containerHeight = mapContainer.clientHeight;
+            filteredLocations.forEach(location => {
+                if ((location.isVisited && showVisited) || (!location.isVisited && showBucketlist)) {
+                    createMarker(location);
+                    createBucketlistItem(location, bucketlistContainer);
+                }
+            });
 
-                                    const controlsWidth = document.getElementById('controls').classList.contains('controls-closed') ? 0 : 300;
+            state.map?.addLayer(state.markerClusterGroup);
+        }
 
-                                    const targetPoint = map.project(markerLatLng, map.getZoom());
-                                    const offsetX = (controlsWidth / 2) - (containerWidth / 2);
-                                    const offsetY = -(containerHeight / 2);
+        function createMarker(location) {
+            const marker = L.circleMarker(
+                [location.data.latitude, location.data.longitude],
+                {
+                    color: location.isVisited ? 'green' : 'blue',
+                    radius: 8
+                }
+            );
 
-                                    const newCenter = map.unproject([
-                                        targetPoint.x + offsetX,
-                                        targetPoint.y + offsetY
-                                    ], map.getZoom());
+            setupMarkerInteractions(marker, location);
+            state.markerClusterGroup.addLayer(marker);
+            state.markers.set(location.id, marker);
+        }
 
-                                    map.setView(newCenter, map.getZoom(), {
-                                        animate: true,
-                                        duration: 0.5
-                                    });
-                                });
+        function setupMarkerInteractions(marker, location) {
+            marker.on('click', (e) => handleMarkerClick(e, state.map));
+            marker.bindPopup(createPopupContent(location));
+        }
 
-                                marker.bindPopup(`
-        <div class="marker-popup">
-            <h3 class="popup-title">${data.name}</h3>
-            <div class="popup-image-container">
-                <img src="${data.imageUrl}" alt="${data.name}">
-            </div>
-            <p class="popup-status ${isVisited ? 'visited' : 'bucketlist'}">
-                ${isVisited ? '✓ Visited' : '○ On Bucketlist'}
-            </p>
-            <button class="popup-button" onclick="toggleVisited('${location.id}', ${!isVisited})">
-                Mark as ${isVisited ? 'Not Visited' : 'Visited'}
-            </button>
-        </div>
-    `);
+        function handleMarkerClick(e, map) {
+            if (!map) return;
 
-                                const itemDiv = document.createElement('div');
-                                itemDiv.className = `bucketlist-item ${isVisited ? 'visited' : ''}`;
-                                itemDiv.innerHTML = `
-                                    <span class="location-name" data-lat="${data.latitude}" data-lng="${data.longitude}">${data.name}</span>
-                                    <button onclick="toggleVisited('${location.id}', ${!isVisited})">
-                                        ${isVisited ? '✓' : '○'}
-                                    </button>
-                                `;
+            const markerLatLng = e.target.getLatLng();
+            const mapContainer = map.getContainer();
+            const controlsWidth = document.getElementById('controls')?.classList.contains('controls-closed') ? 0 : 300;
 
-                                const locationName = itemDiv.querySelector('.location-name');
+            const targetPoint = map.project(markerLatLng, map.getZoom());
+            const offsetX = (controlsWidth / 2) - (mapContainer.clientWidth / 2);
+            const offsetY = -(mapContainer.clientHeight / 2);
 
-                                locationName.addEventListener('click', () => {
-                                    const lat = parseFloat(locationName.dataset.lat);
-                                    const lng = parseFloat(locationName.dataset.lng);
+            const newCenter = map.unproject([
+                targetPoint.x + offsetX,
+                targetPoint.y + offsetY
+            ], map.getZoom());
 
-                                    // Get current zoom level
-                                    const currentZoom = map.getZoom();
+            map.setView(newCenter, map.getZoom(), {
+                animate: true,
+                duration: 0.5
+            });
+        }
 
-                                    // First zoom out
-                                    map.setZoom(currentZoom - 2, {
-                                        animate: true,
-                                        duration: 0.75
-                                    });
+        function createPopupContent(location) {
+            return `
+                <div class="marker-popup">
+                    <h3 class="popup-title">${location.data.name}</h3>
+                    <div class="popup-image-container">
+                        <img src="${location.data.imageUrl}" alt="${location.data.name}">
+                    </div>
+                    <p class="popup-status ${location.isVisited ? 'visited' : 'bucketlist'}">
+                        ${location.isVisited ? '✓ Visited' : '○ On Bucketlist'}
+                    </p>
+                    <button class="popup-button" onclick="toggleVisited('${location.id}', ${!location.isVisited})">
+                        Mark as ${location.isVisited ? 'Not Visited' : 'Visited'}
+                    </button>
+                </div>
+            `;
+        }
 
-                                    // After zooming out, fly to location and zoom in
-                                    setTimeout(() => {
-                                        map.flyTo([lat, lng], 13, {
-                                            animate: true,
-                                            duration: 1.5,
-                                            easeLinearity: 0.25
-                                        });
-                                    });
-                                });
+        function createBucketlistItem(location, container) {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = `bucketlist-item ${location.isVisited ? 'visited' : ''}`;
+            itemDiv.innerHTML = `
+                <span class="location-name" data-lat="${location.data.latitude}" data-lng="${location.data.longitude}">
+                    ${location.data.name}
+                </span>
+                <button onclick="toggleVisited('${location.id}', ${!location.isVisited})">
+                    ${location.isVisited ? '✓' : '○'}
+                </button>
+            `;
 
-                                bucketlistContainer.appendChild(itemDiv);
-                            }
-                        });
+            setupBucketlistItemClick(itemDiv.querySelector('.location-name'));
+            container.appendChild(itemDiv);
+        }
 
-                        map.addLayer(markerClusterGroup);
-                    });
-                }).catch((error) => {
-                    console.error("Error fetching locations:", error);
+        function setupBucketlistItemClick(element) {
+            element?.addEventListener('click', () => {
+                const lat = parseFloat(element.dataset.lat);
+                const lng = parseFloat(element.dataset.lng);
+
+                if (isNaN(lat) || isNaN(lng) || !state.map) return;
+
+                const currentZoom = state.map.getZoom();
+
+                // Smooth zoom animation
+                state.map.setZoom(currentZoom - 2, {
+                    animate: true,
+                    duration: 0.75
                 });
+
+                setTimeout(() => {
+                    state.map?.flyTo([lat, lng], 13, {
+                        animate: true,
+                        duration: 1.5,
+                        easeLinearity: 0.25
+                    });
+                }, 750);
+            });
         }
 
         function setupFilters() {
-            document.getElementById('showBucketlist').addEventListener('change', loadLocations);
-            document.getElementById('showVisited').addEventListener('change', loadLocations);
-
-            document.getElementById('bucketlistSearch').addEventListener('input', loadLocations);
+            document.getElementById('showBucketlist')?.addEventListener('change', loadLocations);
+            document.getElementById('showVisited')?.addEventListener('change', loadLocations);
+            document.getElementById('bucketlistSearch')?.addEventListener('input', loadLocations);
         }
 
         async function toggleVisited(locationId, visited) {
             try {
-                const userId = firebase.auth().currentUser.uid;
+                if (!state.currentUser) return;
+
                 const userVisitsRef = db.collection('userVisits');
 
                 if (visited) {
                     await userVisitsRef.add({
-                        userId: userId,
+                        userId: state.currentUser.uid,
                         locationId: locationId,
                         visitedAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
                 } else {
                     const visitQuery = await userVisitsRef
-                        .where('userId', '==', userId)
+                        .where('userId', '==', state.currentUser.uid)
                         .where('locationId', '==', locationId)
                         .get();
 
-                    visitQuery.forEach(async (doc) => {
-                        await doc.ref.delete();
-                    });
+                    await Promise.all(visitQuery.docs.map(doc => doc.ref.delete()));
                 }
-                loadLocations();
+
+                await loadLocations();
             } catch (error) {
                 console.error("Error updating location:", error);
+                // Could add user-facing error notification here
             }
         }
     </script>
