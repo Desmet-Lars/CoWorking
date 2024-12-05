@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <link rel="stylesheet" href="./style.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <header class="site-header">
@@ -116,42 +116,55 @@
 
             const showBucketlist = document.getElementById('showBucketlist').checked;
             const showVisited = document.getElementById('showVisited').checked;
+            const userId = firebase.auth().currentUser.uid;
 
-            db.collection('locations').get().then((querySnapshot) => {
-                const bucketlistContainer = document.getElementById('bucketlistItems');
-                bucketlistContainer.innerHTML = '';
+            // First, get the user's visited locations
+            db.collection('userVisits')
+                .where('userId', '==', userId)
+                .get()
+                .then((visitSnapshot) => {
+                    const visitedLocations = new Map();
+                    visitSnapshot.forEach((visit) => {
+                        visitedLocations.set(visit.data().locationId, visit.id);
+                    });
 
-                querySnapshot.forEach((doc) => {
-                    const data = doc.data();
-                    const isVisited = data.visited || false;
+                    // Then load all locations
+                    return db.collection('locations').get().then((querySnapshot) => {
+                        const bucketlistContainer = document.getElementById('bucketlistItems');
+                        bucketlistContainer.innerHTML = '';
 
-                    if ((showBucketlist && !isVisited) || (showVisited && isVisited)) {
-                        const marker = L.marker([data.latitude, data.longitude]).addTo(map);
-                        markers.push(marker);
+                        querySnapshot.forEach((doc) => {
+                            const data = doc.data();
+                            const isVisited = visitedLocations.has(doc.id);
 
-                        marker.bindPopup(`
-                            <h3>${data.name}</h3>
-                            <img src="${data.imageUrl}" alt="${data.name}" style="width:100%;max-width:200px">
-                            <p>${isVisited ? 'Visited' : 'On Bucketlist'}</p>
-                            <button onclick="toggleVisited('${doc.id}', ${!isVisited})">
-                                Mark as ${isVisited ? 'Not Visited' : 'Visited'}
-                            </button>
-                        `);
+                            if ((showBucketlist && !isVisited) || (showVisited && isVisited)) {
+                                const marker = L.marker([data.latitude, data.longitude]).addTo(map);
+                                markers.push(marker);
 
-                        const itemDiv = document.createElement('div');
-                        itemDiv.className = `bucketlist-item ${isVisited ? 'visited' : ''}`;
-                        itemDiv.innerHTML = `
-                            <span>${data.name}</span>
-                            <button onclick="toggleVisited('${doc.id}', ${!isVisited})">
-                                ${isVisited ? '✓' : '○'}
-                            </button>
-                        `;
-                        bucketlistContainer.appendChild(itemDiv);
-                    }
+                                marker.bindPopup(`
+                                    <h3>${data.name}</h3>
+                                    <img src="${data.imageUrl}" alt="${data.name}" style="width:100%;max-width:200px">
+                                    <p>${isVisited ? 'Visited' : 'On Bucketlist'}</p>
+                                    <button onclick="toggleVisited('${doc.id}', ${!isVisited})">
+                                        Mark as ${isVisited ? 'Not Visited' : 'Visited'}
+                                    </button>
+                                `);
+
+                                const itemDiv = document.createElement('div');
+                                itemDiv.className = `bucketlist-item ${isVisited ? 'visited' : ''}`;
+                                itemDiv.innerHTML = `
+                                    <span>${data.name}</span>
+                                    <button onclick="toggleVisited('${doc.id}', ${!isVisited})">
+                                        ${isVisited ? '✓' : '○'}
+                                    </button>
+                                `;
+                                bucketlistContainer.appendChild(itemDiv);
+                            }
+                        });
+                    });
+                }).catch((error) => {
+                    console.error("Error fetching locations:", error);
                 });
-            }).catch((error) => {
-                console.error("Error fetching locations:", error);
-            });
         }
 
         function setupFilters() {
@@ -159,11 +172,29 @@
             document.getElementById('showVisited').addEventListener('change', loadLocations);
         }
 
-        async function toggleVisited(docId, visited) {
+        async function toggleVisited(locationId, visited) {
             try {
-                await db.collection('locations').doc(docId).update({
-                    visited: visited
-                });
+                const userId = firebase.auth().currentUser.uid;
+                const userVisitsRef = db.collection('userVisits');
+
+                if (visited) {
+                    // Add to visited locations
+                    await userVisitsRef.add({
+                        userId: userId,
+                        locationId: locationId,
+                        visitedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                } else {
+                    // Remove from visited locations
+                    const visitQuery = await userVisitsRef
+                        .where('userId', '==', userId)
+                        .where('locationId', '==', locationId)
+                        .get();
+
+                    visitQuery.forEach(async (doc) => {
+                        await doc.ref.delete();
+                    });
+                }
                 loadLocations();
             } catch (error) {
                 console.error("Error updating location:", error);
