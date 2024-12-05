@@ -90,17 +90,24 @@ nav a:hover {
     }
 }
 
+.beforefold {
+    background-image: url(images/background.png);
+    opacity: 0.9;
+}
+
 .beforefold h1 {
-    color:#2563eb;
-    margin: 1rem;
+    color:hsl(221, 83%, 53%);
+    margin: 0 auto;
     padding: 1rem;
+    font-size: 40px;
     text-align: center;
 }
 
 .beforefold p {
     color:#4b5563;
-    margin: 1rem;
+    margin: 0 auto;
     padding: 1rem;
+    max-width: 50%;
     text-align: center;
 }
 
