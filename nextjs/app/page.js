@@ -2,7 +2,6 @@
 import { useState } from 'react';
 import { db, storage } from '../lib/FirebaseConfig';
 import { collection, addDoc } from 'firebase/firestore';
-import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 
 const UploadPage = () => {
     const [name, setName] = useState('');
