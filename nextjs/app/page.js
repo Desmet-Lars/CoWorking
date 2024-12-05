@@ -20,12 +20,9 @@ const UploadPage = () => {
       const lat = parseFloat(latitude);
       const lng = parseFloat(longitude);
 
-      const preciseLat = parseFloat(lat.toFixed(6));
-      const preciseLng = parseFloat(lng.toFixed(6));
+      console.log('Latitude:', lat, 'Longitude:', lng);
 
-      console.log('Latitude:', preciseLat, 'Longitude:', preciseLng);
-
-      if (isNaN(preciseLat) || isNaN(preciseLng)) {
+      if (isNaN(lat) || isNaN(lng)) {
         setMessage('Error: Latitude and longitude must be valid numbers');
         setLoading(false);
         return;
@@ -34,8 +31,8 @@ const UploadPage = () => {
       try {
         const docRef = await addDoc(collection(db, 'locations'), {
           name: name.trim(),
-          latitude: preciseLat,
-          longitude: preciseLng,
+          latitude: lat,
+          longitude: lng,
           imageUrl: imageUrl.trim(),
           timestamp: new Date(),
         });
