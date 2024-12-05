@@ -16,12 +16,10 @@ const UploadPage = () => {
       setLoading(true);
       setMessage('');
 
-      const lat = Number(latitude);
-      const lng = Number(longitude);
+      const lat = latitude;
+      const lng = longitude;
 
-      console.log('Original inputs:', latitude, longitude);
-      console.log('Parsed values:', lat, lng);
-      console.log('Type of lat:', typeof lat, 'Type of lng:', typeof lng);
+
 
       if (isNaN(lat) || isNaN(lng)) {
         setMessage('Error: Latitude and longitude must be valid numbers');
