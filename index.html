@@ -1,16 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home</title>
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
-      rel="stylesheet"
-    />
+      rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-    <link rel="stylesheet" href="./style.css" />
+    <link rel="stylesheet" href="./style.css">
+    <style>
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #333;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 5px;
+            display: none;
+            z-index: 1000;
+        }
+    </style>
   </head>
   <body>
     <header class="site-header">
@@ -28,6 +41,10 @@
             </nav>
         </div>
     </header>
+    <div id="projectNotification" class="notification">
+        This is a school project website created for educational purposes.
+        <button onclick="acknowledgeNotification()" style="margin-left: 10px;">Got it!</button>
+    </div>
     <main>
 			<div class="beforefold">
 				<section>
@@ -84,6 +101,36 @@
         } else {
           loginLink.textContent = "Login";
         }
+      });
+
+      // Cookie notification logic
+      function setCookie(name, value, days) {
+          const expires = new Date();
+          expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
+          document.cookie = name + '=' + value + ';expires=' + expires.toUTCString() + ';path=/';
+      }
+
+      function getCookie(name) {
+          const nameEQ = name + "=";
+          const ca = document.cookie.split(';');
+          for(let i = 0; i < ca.length; i++) {
+              let c = ca[i];
+              while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+              if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+          }
+          return null;
+      }
+
+      function acknowledgeNotification() {
+          document.getElementById('projectNotification').style.display = 'none';
+          setCookie('projectNotificationSeen', 'true', 30);
+      }
+
+      // Check if it's the first visit
+      window.addEventListener('load', () => {
+          if (!getCookie('projectNotificationSeen')) {
+              document.getElementById('projectNotification').style.display = 'block';
+          }
       });
     </script>
   </body>

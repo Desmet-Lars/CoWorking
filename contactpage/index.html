@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="nl">
 <head>
     <meta charset="UTF-8">
     <title>Contact</title>
@@ -23,23 +23,26 @@
         </div>
     </header>
     <main>
-        <section id="contact_input">
+        <section>
             <div>
-                <label for="voornaam">Voornaam:</label>
-                <input type="voornaam" id="voornaam" required>
+                <label for="voornaam">Voornaam:</label><br>
+                <input type="voornaam" class="voornaam" id="voornaam" required>
             </div>
             <div>
-                <label for="achternaam">Achternaam:</label>
-                <input type="achternaam" id="achternaam" required>
+                <label for="achternaam">Achternaam:</label><br>
+                <input type="achternaam" class="achternaam" id="achternaam" required>
             </div>
             <div>
-                <label for="email">Email:</label>
-                <input type="email" id="email" required>
+                <label for="email">Email:</label><br>
+                <input type="email" class="email" id="email" required>
             </div>
             <div>
-                <label for="bericht">Bericht:</label>
-                <input type="bericht" id="bericht" required>
+                <label for="bericht">Bericht:</label><br>
+                <textarea type="text" class="bericht" id="bericht" required></textarea>
             </div>
+        </section>
+        <section>
+            <button class="verzend-bericht" type="submit">Verzend</button>
         </section>
     </main>
 </body>
