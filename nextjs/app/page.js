@@ -16,10 +16,8 @@ const UploadPage = () => {
       setLoading(true);
       setMessage('');
 
-      const lat = latitude;
-      const lng = longitude;
-
-
+      const lat = parseFloat(latitude);
+      const lng = parseFloat(longitude);
 
       if (isNaN(lat) || isNaN(lng)) {
         setMessage('Error: Latitude and longitude must be valid numbers');
