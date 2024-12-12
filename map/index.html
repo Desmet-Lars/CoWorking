@@ -275,6 +275,9 @@
                     <button class="popup-button" onclick="toggleVisited('${location.id}', ${!location.isVisited})">
                         Mark as ${location.isVisited ? 'Not Visited' : 'Visited'}
                     </button>
+                    <button style="background-color: red" class="popup-button" onclick="deleteLocation('${location.id}')">
+                        Delete Location
+                    </button>
                 </div>
             `;
         }
@@ -350,6 +353,17 @@
                 await loadLocations();
             } catch (error) {
                 console.error("Error updating location:", error);
+                // Could add user-facing error notification here
+            }
+        }
+
+        async function deleteLocation(locationId) {
+            try {
+                await db.collection('locations').doc(locationId).delete();
+                console.log(`Location with ID ${locationId} deleted successfully.`);
+                await loadLocations(); // Reload locations to update the UI
+            } catch (error) {
+                console.error("Error deleting location:", error);
                 // Could add user-facing error notification here
             }
         }
