@@ -1,3 +1,24 @@
+*, *::before, *::after {
+    box-sizing: border-box;
+  }
+  
+  :root {
+    background-color: #FFFDFF;
+    font-family: 'Montserrat', Sans-Serif;
+    line-height: 1.6;
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    margin: 0; 
+  }
+  
+  .container {
+    max-width: 80rem;
+    margin-inline: auto;
+    padding-inline: 1rem;
+  }
+
 * {
     margin: 0;
     padding: 0;
@@ -38,21 +59,22 @@
     padding: 0.5rem;
 }
 
-nav ul {
-    display: flex;
-    gap: 2rem;
-    list-style: none;
-}
+nav {
+    ul {
+        display: flex;
+        gap: 2rem;
+        list-style: none;
+    }
+    a {
+        text-decoration: none;
+        color: #4b5563;
+        font-weight: 500;
+        transition: color 0.2s;
+    }
+    a:hover {
+        color:#2563eb;
+    }
 
-nav a {
-    text-decoration: none;
-    color: #4b5563;
-    font-weight: 500;
-    transition: color 0.2s;
-}
-
-nav a:hover {
-    color: #2563eb;
 }
 
 @media (max-width: 768px) {
@@ -93,43 +115,38 @@ nav a:hover {
 .beforefold {
     background-image: url(images/background.png);
     opacity: 0.9;
-}
-
-.beforefold h1 {
-    color:hsl(221, 83%, 53%);
-    margin: 0 auto;
-    padding: 1rem;
-    font-size: 40px;
-    text-align: center;
-}
-
-.beforefold p {
-    color:#4b5563;
-    margin: 0 auto;
-    padding: 1rem;
-    max-width: 50%;
-    text-align: center;
-}
-
-.beforefold button {
-    /* Inline */
-    margin: 0 auto;
-    padding: 1rem;
-    display: block;
-    /* Customisation */
-    background-color:#2563eb;
-    color:white;
-    border-radius: 2rem;
-    border: none;
-    transition: opacity 0,15s;
-}
-
-.beforefold button:hover {
-    cursor: pointer;
-    opacity: 0.9;
-    transition: opacity 0,15s;
-}
-
-.beforefold button:active {
-    opacity: 0.7;
+    p {
+        color:#4b5563;
+        margin: 0 auto;
+        padding: 1rem;
+        max-width: 50%;
+        text-align: center;
+    }
+    h1 {
+        color:hsl(221, 83%, 53%);
+        margin: 0 auto;
+        padding: 1rem;
+        font-size: 40px;
+        text-align: center;
+    }
+    button {
+            /* Inline */
+        margin: 0 auto;
+        padding: 1rem;
+        display: block;
+        /* Customisation */
+        background-color:#2563eb;
+        color:white;
+        border-radius: 2rem;
+        border: none;
+        transition: opacity 0,15s;
+    }
+    button:hover {
+        cursor: pointer;
+        opacity: 0.9;
+        transition: opacity 0,15s;
+    }
+    button:active {
+        opacity: 0.7;
+    }
 }
