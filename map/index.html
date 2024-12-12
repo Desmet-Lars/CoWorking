@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="spinner.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css">
-    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js" async></script>
 </head>
 
 <body>
@@ -80,7 +80,8 @@
             markerClusterGroup: null,
             markers: new Map(), // Using Map for better marker tracking
             allLocations: [],
-            currentUser: null
+            currentUser: null,
+            errorMessage: null // Added to manage error messages
         };
 
         // Initialize app
@@ -132,10 +133,8 @@
                 if (user) {
                     if (loginLink) {
                         loginLink.textContent = 'Logout';
-                        loginLink.addEventListener('click', (e) => {
-                            e.preventDefault();
-                            firebase.auth().signOut();
-                        });
+                        loginLink.removeEventListener('click', handleLogout); // Prevent multiple listeners
+                        loginLink.addEventListener('click', handleLogout);
                     }
                     initializeMap();
                     setupFilters();
@@ -143,6 +142,11 @@
                     window.location.href = '../login';
                 }
             });
+        }
+
+        function handleLogout(e) {
+            e.preventDefault();
+            firebase.auth().signOut();
         }
 
         function initializeMap() {
@@ -197,7 +201,7 @@
 
             } catch (error) {
                 console.error("Error loading locations:", error);
-                // Could add user-facing error notification here
+                alert("An error occurred while loading locations. Please try again."); // User-facing error notification
             }
         }
 
@@ -211,10 +215,15 @@
                 location.name.toLowerCase().includes(searchQuery)
             );
 
+            const uniqueLocations = new Map(); // Use a Map to track unique locations
+
             filteredLocations.forEach(location => {
                 if ((location.isVisited && showVisited) || (!location.isVisited && showBucketlist)) {
-                    createMarker(location);
-                    createBucketlistItem(location, bucketlistContainer);
+                    if (!uniqueLocations.has(location.id)) { // Check for uniqueness
+                        uniqueLocations.set(location.id, location); // Add to unique locations
+                        createMarker(location);
+                        createBucketlistItem(location, bucketlistContainer);
+                    }
                 }
             });
 
@@ -244,8 +253,6 @@
             if (!map) return;
 
             const markerLatLng = e.target.getLatLng();
-
-            // Set the desired zoom level
             const zoomLevel = 13; // Adjust this value as needed
 
             // Directly fly to the marker's location with the specified zoom level
@@ -344,7 +351,7 @@
                 await loadLocations();
             } catch (error) {
                 console.error("Error updating location:", error);
-                // Could add user-facing error notification here
+                alert("An error occurred while updating the location. Please try again."); // User-facing error notification
             }
         }
 
@@ -355,7 +362,7 @@
                 await loadLocations(); // Reload locations to update the UI
             } catch (error) {
                 console.error("Error deleting location:", error);
-                // Could add user-facing error notification here
+                alert("An error occurred while deleting the location. Please try again."); // User-facing error notification
             }
         }
     </script>
