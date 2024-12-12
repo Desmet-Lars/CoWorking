@@ -9,82 +9,91 @@
   />
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-  <link rel="stylesheet" href="../style.css" />
+  <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
-    <header class="site-header">
-        <div class="header-content">
-            <h1>BucketMap</h1>
-            <button id="menuToggle" class="menu-toggle">☰</button>
-            <nav id="mainNav" class="nav-closed">
-                <ul>
-                    <li><a href="../">Home</a></li>
-                    <li><a href="../map">Buckmap</a></li>
-                    <li><a href="/aboutus">About Us</a></li>
-                    <li><a href="../contactpage">Contact Page</a></li>
-                    <li><a href="../login/" id="loginLink">Login</a></li>
-                </ul>
-            </nav>
-        </div>
-    </header>
+  <header class="site-header">
+    <div class="header-content">
+        <h1>BucketMap</h1>
+        <button id="menuToggle" class="menu-toggle">☰</button>
+        <nav id="mainNav" class="nav-closed">
+            <ul>
+                <li><a href="./">Home</a></li>
+                <li><a href="./map">Buckmap</a></li>
+                <li><a href="./aboutus">About Us</a></li>
+                <li><a href="./contactpage">Contact Page</a></li>
+                <li><a href="./login/" id="loginLink">Login</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
     <main>
         <section>
             <h2>Arda Alkan</h2>
-            <p> Gamed veel te veel.</p>
+            <p> Gamed veel te veel.
+              Lorem ipsum dolor sit amet consectetur adipisicing elit. Atque officiis aperiam maiores sint possimus inventore enim. A tempora quidem dignissimos est eveniet facere aliquid similique ab? Consequatur quidem dolores est.
+            </p>
+            <img src="#" alt="Foto van een eigenaar">
         </section>
         <section>
             <h2>Bunyamin kirimli</h2>
-            <p>iets</p>
+            <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Modi ab cumque iste nemo facere, facilis ex nobis exercitationem molestiae corporis nihil atque nisi consectetur officiis illum quae! Culpa, eum ipsa!</p>
+            <img src="#" alt="Foto van een eigenaar">
         </section>
         <section>
-            <h2>Lars DeSmet</h2>
-            <p> </p>
+            <h2>Lars Desmet</h2>
+            <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Est alias magnam illo enim velit. Reprehenderit doloremque laudantium esse, unde pariatur, accusamus nam eligendi voluptatibus aut, nostrum asperiores ipsum praesentium consequuntur!</p>
+            <img src="#" alt="Foto van een eigenaar">
         </section>
         <section>
             <h2>Mattis Callens</h2>
-            <p> iets</p>
+            <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Aut, nostrum. Est maiores necessitatibus, voluptates quis laborum aspernatur dicta dolorem, velit ipsum magnam molestiae esse eaque rem magni, quo nobis sit?</p>
+            <img src="#" alt="Foto van een eigenaar">
         </section>
         <section>
             <h2>Mylan Devlaminck</h2>
-            <p>iets</p>
+            <p>Lorem, ipsum dolor sit amet consectetur adipisicing elit. Voluptatum, nihil architecto similique sapiente cumque molestiae magnam animi ipsum, doloremque incidunt odio dolore porro beatae. Labore exercitationem aliquam dolorum non nihil?</p>
+            <img src="#" alt="Foto van een eigenaar">
         </section>
     </main>
 
     <footer>
-        <p>Lars heef een <strong>kleine piemel</strong></p>
     </footer>
 </body>
 <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyChQQiUKzxdvITadpBhMM4rryaNL4hLNaY",
-      authDomain: "buckmap-83956.firebaseapp.com",
-      projectId: "buckmap-83956",
-      storageBucket: "buckmap-83956.firebasestorage.app",
-      messagingSenderId: "809697568507",
-      appId: "1:809697568507:web:b2e70b0f7a04837063f25e",
-      measurementId: "G-4JD9LL21HT",
-    };
+      const firebaseConfig = {
+        apiKey: "AIzaSyChQQiUKzxdvITadpBhMM4rryaNL4hLNaY",
+        authDomain: "buckmap-83956.firebaseapp.com",
+        projectId: "buckmap-83956",
+        storageBucket: "buckmap-83956.firebasestorage.app",
+        messagingSenderId: "809697568507",
+        appId: "1:809697568507:web:b2e70b0f7a04837063f25e",
+        measurementId: "G-4JD9LL21HT",
+      };
 
-    firebase.initializeApp(firebaseConfig);
+      firebase.initializeApp(firebaseConfig);
 
-    // Mobile menu toggle
-    document.getElementById("menuToggle").addEventListener("click", () => {
-      const nav = document.getElementById("mainNav");
-      nav.classList.toggle("nav-closed");
-    });
+      // Mobile menu toggle
+      document.getElementById("menuToggle").addEventListener("click", () => {
+        const nav = document.getElementById("mainNav");
+        nav.classList.toggle("nav-closed");
+      });
 
-    // Check authentication state
-    firebase.auth().onAuthStateChanged((user) => {
-      const loginLink = document.getElementById("loginLink");
-      if (user) {
-        loginLink.textContent = "Logout";
-        loginLink.addEventListener("click", (e) => {
-          e.preventDefault();
-          firebase.auth().signOut();
-        });
-      } else {
-        loginLink.textContent = "Login";
-      }
-    });
+      // Check authentication state
+      firebase.auth().onAuthStateChanged((user) => {
+        const loginLink = document.getElementById("loginLink");
+        if (user) {
+          loginLink.textContent = "Logout";
+          loginLink.addEventListener("click", (e) => {
+            e.preventDefault();
+            firebase.auth().signOut();
+          });
+        } else {
+          loginLink.textContent = "Login";
+        }
+      });
+
+
+
 </script>
 </html>
