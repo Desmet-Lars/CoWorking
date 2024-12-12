@@ -231,17 +231,24 @@
         }
 
         function createMarker(location) {
-            const marker = L.circleMarker(
-                [location.data.latitude, location.data.longitude],
-                {
-                    color: location.isVisited ? 'green' : 'blue',
-                    radius: 8
-                }
-            );
+            const existingMarker = Array.from(state.markers.values()).find(marker => {
+                const latLng = marker.getLatLng();
+                return latLng.lat === location.data.latitude && latLng.lng === location.data.longitude;
+            });
 
-            setupMarkerInteractions(marker, location);
-            state.markerClusterGroup.addLayer(marker);
-            state.markers.set(location.id, marker);
+            if (!existingMarker) { // Only create a new marker if one doesn't already exist
+                const marker = L.circleMarker(
+                    [location.data.latitude, location.data.longitude],
+                    {
+                        color: location.isVisited ? 'green' : 'blue',
+                        radius: 8
+                    }
+                );
+
+                setupMarkerInteractions(marker, location);
+                state.markerClusterGroup.addLayer(marker);
+                state.markers.set(location.id, marker);
+            }
         }
 
         function setupMarkerInteractions(marker, location) {
