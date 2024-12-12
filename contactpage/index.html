@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="nl">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Contact</title>
@@ -23,27 +23,19 @@
         </div>
     </header>
     <main>
-        <section class="container">
-            <div>
-                <label for="voornaam">Voornaam:</label><br>
-                <input type="voornaam" class="voornaam" id="voornaam" required>
-            </div>
-            <div>
-                <label for="achternaam">Achternaam:</label><br>
-                <input type="achternaam" class="achternaam" id="achternaam" required>
-            </div>
-            <div>
-                <label for="email">Email:</label><br>
-                <input type="email" class="email" id="email" required>
-            </div>
-            <div>
-                <label for="bericht">Bericht:</label><br>
-                <textarea type="text" class="bericht" id="bericht" required></textarea>
-            </div>
-        </section>
-        <section class="container">
-            <input class="verzend-button" type="submit"></button>
-        </section>
+        <div class="contact-container">
+            <form action="https://api.web3forms.com/submit" method="POST" class="contact-left">
+                <div class="contact-left-title">
+                    <h2>Get in touch</h2>
+                    <hr>
+                </div>
+                <input type="hidden" name="access_key" value="70a26af6-fd23-414d-a60f-b3c8cfdd884d">
+                <input type="text" name="name" placeholder="Your Name:" class="contact-inputs" required>
+                <input type="email" name="email" placeholder="Your E-mail:" class="contact-inputs" required>
+                <textarea name="Message" placeholder="Your Message" class="contact-inputs" required></textarea>
+                <button type="submit" >Submit Message</button>
+            </form>
+        </div>
     </main>
 </body>
 </html>
