@@ -262,7 +262,7 @@
             const markerLatLng = e.target.getLatLng();
             const zoomLevel = 13; // Adjust this value as needed
 
-            // Directly fly to the marker's location with the specified zoom level
+            // Use setView for a smoother transition without jumping
             map.flyTo(markerLatLng, zoomLevel, {
                 animate: true,
                 duration: 1,
