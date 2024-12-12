@@ -244,21 +244,15 @@
             if (!map) return;
 
             const markerLatLng = e.target.getLatLng();
-            const mapContainer = map.getContainer();
-            const controlsWidth = document.getElementById('controls')?.classList.contains('controls-closed') ? 0 : 300;
 
-            const targetPoint = map.project(markerLatLng, map.getZoom());
-            const offsetX = (controlsWidth / 2) - (mapContainer.clientWidth / 2);
-            const offsetY = -(mapContainer.clientHeight / 2);
+            // Set the desired zoom level
+            const zoomLevel = 13; // Adjust this value as needed
 
-            const newCenter = map.unproject([
-                targetPoint.x + offsetX,
-                targetPoint.y + offsetY
-            ], map.getZoom());
-
-            map.setView(newCenter, map.getZoom(), {
+            // Directly fly to the marker's location with the specified zoom level
+            map.flyTo(markerLatLng, zoomLevel, {
                 animate: true,
-                duration: 0.5
+                duration: 1,
+                easeLinearity: 0.25
             });
         }
 
@@ -307,19 +301,16 @@
 
                 const currentZoom = state.map.getZoom();
 
-                // Smooth zoom animation
-                state.map.setZoom(currentZoom - 2, {
+                // Improved smooth zoom and pan
+                state.map.flyTo([lat, lng], 13, {
                     animate: true,
-                    duration: 0.75
-                });
-
-                setTimeout(() => {
-                    state.map?.flyTo([lat, lng], 13, {
+                    duration: 1.5,
+                    easeLinearity: 0.25,
+                    zoom: {
                         animate: true,
-                        duration: 1.5,
-                        easeLinearity: 0.25
-                    });
-                }, 750);
+                        duration: 1.5
+                    }
+                });
             });
         }
 
