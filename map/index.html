@@ -120,8 +120,13 @@
                 if (controlsToggle) {
                     controlsToggle.textContent = controls?.classList.contains('controls-closed')
                         ? '☰ Show Controls'
-                        : '��� Hide Controls';
+                        : '☰ Hide Controls';
                 }
+                        if (zoomControls) {
+            const areControlsClosed = controls?.classList.contains('controls-closed');
+            zoomControls.style.display = areControlsClosed ? 'block' : 'none';
+            zoomControls.style.visibility = areControlsClosed ? 'visible' : 'hidden';
+        }
             });
         }
 
@@ -214,6 +219,9 @@
             const filteredLocations = state.allLocations.filter(location =>
                 location.name.toLowerCase().includes(searchQuery)
             );
+
+            // Sort locations alphabetically by name
+            filteredLocations.sort((a, b) => a.name.localeCompare(b.name));
 
             const uniqueLocations = new Map(); // Use a Map to track unique locations
 

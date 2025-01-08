@@ -3,10 +3,8 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home</title>
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
-      rel="stylesheet">
+    <title>BucketMap</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <link rel="stylesheet" href="./style.css">
@@ -33,9 +31,9 @@
             <nav id="mainNav" class="nav-closed">
                 <ul>
                     <li><a href="./">Home</a></li>
-                    <li><a href="./map">Buckmap</a></li>
+                    <li><a href="./map">BucketMap</a></li>
                     <li><a href="./aboutus">About Us</a></li>
-                    <li><a href="./contactpage">Contact Page</a></li>
+                    <li><a href="./contactpage">Contact</a></li>
                     <li><a href="./login/" id="loginLink">Login</a></li>
                 </ul>
             </nav>
@@ -46,24 +44,44 @@
         <button onclick="acknowledgeNotification()" style="margin-left: 10px;">Got it!</button>
     </div>
     <main>
-			<div class="beforefold">
-				<section>
-					<h1>YOUR BUCKETMAP REALIZED VISUALLY</h1>
-					<p>
-						Welcome to BucketMap – the site that turns your bucket list into a map! Pin your dream destinations, track your goals, and share your journey. Start mapping your adventures today!
-					</p>
-					<button>Read More</button>
-					<hr>
-				</section>
-			</div>
-			<div class="afterfold">
-				<section>
-					<h2></h2>
-					<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
-				</section>
-			</div>
-		</main>
-    <footer></footer>
+        <section class="hero">
+            <div class="container">
+                <h1>Visualize Your Bucket List</h1>
+                <p>Welcome to BucketMap – the site that turns your bucket list into a map! Pin your dream destinations, track your goals, and share your journey. Start mapping your adventures today!</p>
+                <button onclick="window.location.href='./login/signup'">Get Started</button>
+            </div>
+        </section>
+        <section class="features">
+            <div class="container">
+            <h2>Features</h2>
+            <div class="feature-grid">
+                <div class="feature-item">
+                <h3>Interactive Map</h3>
+                <p>Find your dream destinations and visualize your bucket list on an interactive map.</p>
+                </div>
+                <div class="feature-item">
+                <h3>Track Your Goals</h3>
+                <p>Keep track of your progress and achieve your goals with ease.</p>
+                </div>
+                <div class="feature-item">
+                <h3>Check/Uncheck Locations</h3>
+                <p>Mark locations as visited or unvisited to keep an accurate record of your travels.</p>
+                </div>
+            </div>
+            </div>
+        </section>
+        <section class="about">
+            <div class="container">
+            <h2>About Us</h2>
+            <p>BucketMap is a project created for educational purposes. Our mission is to help you visualize and achieve your dreams by turning your bucket list into an interactive map.</p>
+            </div>
+        </section>
+    </main>
+    <footer>
+        <div class="container">
+            <p>&copy; 2023 BucketMap. All rights reserved.</p>
+        </div>
+    </footer>
     <script>
       const firebaseConfig = {
         apiKey: "AIzaSyChQQiUKzxdvITadpBhMM4rryaNL4hLNaY",
