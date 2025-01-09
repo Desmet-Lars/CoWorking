@@ -116,6 +116,7 @@ nav {
     color: #2563eb;
     text-align: center;
     padding: 4rem 1rem;
+    animation: slideInUp 1s ease-in-out;
 }
 
 .hero h1 {
@@ -167,6 +168,19 @@ nav {
     border-radius: 0.5rem;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.feature-item:nth-child(1) {
+    animation: slideInLeft 1s ease-in-out;
+}
+
+.feature-item:nth-child(2) {
+    animation: fadeIn 1s ease-in-out;
+}
+
+.feature-item:nth-child(3) {
+    animation: slideInRight 1s ease-in-out;
 }
 
 .feature-item h3 {
@@ -176,6 +190,11 @@ nav {
 
 .feature-item p {
     color: #4b5563;
+}
+
+.feature-item:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 .about {
@@ -223,4 +242,52 @@ footer p {
 .location-item label {
     color: #4b5563;
     font-weight: 500;
+}
+
+/* Add keyframes for animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+
+@keyframes slideInLeft {
+    from {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Apply animations */
+.notification {
+    animation: fadeIn 1s ease-in-out;
+}
+
+/* Hover animations */
+button {
+    transition: transform 0.3s ease, background-color 0.3s ease;
+}
+
+button:hover {
+    transform: scale(1.05);
+    background-color: #555;
 }
