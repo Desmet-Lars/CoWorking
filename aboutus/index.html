@@ -9,7 +9,7 @@
   />
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-  <link rel="stylesheet" href="./style.css" />
+  <link rel="stylesheet" href="../style.css" />
 </head>
 <body>
   <header class="site-header">
@@ -18,16 +18,17 @@
         <button id="menuToggle" class="menu-toggle">☰</button>
         <nav id="mainNav" class="nav-closed">
             <ul>
-                <li><a href="./">Home</a></li>
-                <li><a href="./map">Buckmap</a></li>
-                <li><a href="./aboutus">About Us</a></li>
-                <li><a href="./contactpage">Contact Page</a></li>
-                <li><a href="./login/" id="loginLink">Login</a></li>
+                <li><a href="../">Home</a></li>
+                <li><a href="../map">Buckmap</a></li>
+                <li><a href="../aboutus">About Us</a></li>
+                <li><a href="../contactpage">Contact Page</a></li>
+                <li><a href="../login/" id="loginLink">Login</a></li>
             </ul>
         </nav>
     </div>
 </header>
-    <main>
+    <main style="margin-left: 1em;">
+        <h2 style="font-size: 2em;">About Us</h2>
         <section>
             <h2>Arda Alkan</h2>
             <p> Gamed veel te veel.
@@ -56,8 +57,10 @@
             <img src="#" alt="Foto van een eigenaar">
         </section>
     </main>
-
     <footer>
+        <div class="container">
+            <p>&copy; 2025 BucketMap. No rights reserved.</p>
+        </div>
     </footer>
 </body>
 <script>
