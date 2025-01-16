@@ -253,10 +253,12 @@ footer p {
 
 .aboutus {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   align-items: center;
   margin-bottom: 3rem;
   text-align: center;
+
+  
 }
 
 .aboutus_cont {
