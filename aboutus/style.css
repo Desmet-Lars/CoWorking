@@ -10,7 +10,7 @@
 }
 
 body {
-  margin: 0; 
+  margin: 0;
 }
 
 .container {
@@ -44,7 +44,7 @@ body {
   align-items: center;
 }
 
-.site-header h1 {
+.site-header .logo {
   color: #2563eb;
   font-weight: 600;
   font-size: 1.5rem;
