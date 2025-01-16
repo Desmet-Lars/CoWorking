@@ -31,7 +31,7 @@
             z-index: 900;
         }
 
-        .site-header h1 {
+        .site-header .logo {
             color: #2563eb;
             font-weight: 600;
             font-size: 1.5rem;

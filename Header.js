@@ -20,7 +20,7 @@
         const headerHTML = `
             <header class="site-header">
                 <div class="header-content">
-                    <h1>BucketMap</h1>
+                    <div class="logo">BucketMap</div>
                     <button id="menuToggle" class="menu-toggle">☰</button>
                     <nav id="mainNav" class="nav-closed">
                         <ul>
