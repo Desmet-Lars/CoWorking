@@ -47,6 +47,22 @@
         </div>
         <div id="map"></div>
     </main>
+
+    <!-- Modal for adding location -->
+    <div id="addLocationModal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="closeModal">&times;</span>
+            <h2>Add Location</h2>
+            <form id="addLocationForm">
+                <label for="locationName">Location Name:</label>
+                <input type="text" id="locationName" name="locationName" required>
+                <label for="imageUrl">Image URL:</label>
+                <input type="text" id="imageUrl" name="imageUrl" required>
+                <button type="submit">Add Location</button>
+            </form>
+        </div>
+    </div>
+
     <script src="../Header.js"></script>
     <script>
 
@@ -57,7 +73,8 @@
             markers: new Map(), // Using Map for better marker tracking
             allLocations: [],
             currentUser: null,
-            errorMessage: null // Added to manage error messages
+            errorMessage: null, // Added to manage error messages
+            newLocation: null // Added to store new location coordinates
         };
 
         // Initialize app
@@ -70,6 +87,7 @@
         function initializeApp() {
             setupNavigationHandlers();
             setupAuthStateObserver();
+            setupModalHandlers();
         }
 
         function setupNavigationHandlers() {
@@ -232,7 +250,6 @@
                     }
                 );
 
-
                 setupMarkerInteractions(marker, location);
                 state.markerClusterGroup.addLayer(marker);
                 state.markers.set(location.id, marker);
@@ -374,28 +391,84 @@
 
         // Function to handle map click event
         async function onMapClick(e) {
-            const { lat, lng } = e.latlng;
-            const locationName = prompt("Enter the name of the location:");
+            state.newLocation = e.latlng;
+            document.getElementById('addLocationModal').style.display = 'block';
+        }
 
-            if (locationName) {
-                try {
-                    const newLocationRef = await db.collection('locations').add({
-                        name: locationName,
-                        latitude: lat,
-                        longitude: lng,
-                        imageUrl: '', // Add a default or empty image URL
-                    });
+        function setupModalHandlers() {
+            const modal = document.getElementById('addLocationModal');
+            const closeModal = document.getElementById('closeModal');
+            const addLocationForm = document.getElementById('addLocationForm');
 
-                    console.log(`Location added with ID: ${newLocationRef.id}`);
-                    await loadLocations(); // Reload locations to update the UI
-                } catch (error) {
-                    console.error("Error adding location:", error);
-                    alert("An error occurred while adding the location. Please try again."); // User-facing error notification
+            closeModal.addEventListener('click', () => {
+                modal.style.display = 'none';
+            });
+
+            addLocationForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const locationName = document.getElementById('locationName').value;
+                const imageUrl = document.getElementById('imageUrl').value;
+
+                if (locationName && imageUrl && state.newLocation) {
+                    try {
+                        const newLocationRef = await db.collection('locations').add({
+                            name: locationName,
+                            latitude: state.newLocation.lat,
+                            longitude: state.newLocation.lng,
+                            imageUrl: imageUrl
+                        });
+
+                        console.log(`Location added with ID: ${newLocationRef.id}`);
+                        await loadLocations(); // Reload locations to update the UI
+                        modal.style.display = 'none';
+                    } catch (error) {
+                        console.error("Error adding location:", error);
+                        alert("An error occurred while adding the location. Please try again."); // User-facing error notification
+                    }
                 }
-            }
+            });
         }
 
     </script>
+    <style>
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0, 0, 0);
+            background-color: rgba(0, 0, 0, 0.4);
+            padding-top: 60px;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+    </style>
 </body>
 
 </html>
