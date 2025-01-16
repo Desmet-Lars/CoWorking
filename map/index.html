@@ -468,7 +468,7 @@
             width: 80%;
             max-width: 500px;
             z-index: 1001; /* Ensure the modal content is on top */
-            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
             border-radius: 10px;
         }
 
@@ -497,8 +497,26 @@
 
         .modal-content input {
             width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .modal-content button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .modal-content button:hover {
+            background-color: #45a049;
         }
     </style>
+
 </body>
 
 </html>
