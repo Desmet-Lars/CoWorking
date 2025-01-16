@@ -98,11 +98,11 @@
                         ? '☰ Show Controls'
                         : '☰ Hide Controls';
                 }
-                        if (zoomControls) {
-            const areControlsClosed = controls?.classList.contains('controls-closed');
-            zoomControls.style.display = areControlsClosed ? 'block' : 'none';
-            zoomControls.style.visibility = areControlsClosed ? 'visible' : 'hidden';
-        }
+                if (zoomControls) {
+                    const areControlsClosed = controls?.classList.contains('controls-closed');
+                    zoomControls.style.display = areControlsClosed ? 'block' : 'none';
+                    zoomControls.style.visibility = areControlsClosed ? 'visible' : 'hidden';
+                }
             });
         }
 
@@ -146,6 +146,9 @@
             L.control.zoom({ position: 'topleft' }).addTo(state.map);
             state.markerClusterGroup = L.markerClusterGroup();
             loadLocations();
+
+            // Add click event listener to the map
+            state.map.on('click', onMapClick);
         }
 
         async function loadLocations() {
@@ -366,6 +369,29 @@
             } catch (error) {
                 console.error("Error deleting location:", error);
                 alert("An error occurred while deleting the location. Please try again."); // User-facing error notification
+            }
+        }
+
+        // Function to handle map click event
+        async function onMapClick(e) {
+            const { lat, lng } = e.latlng;
+            const locationName = prompt("Enter the name of the location:");
+
+            if (locationName) {
+                try {
+                    const newLocationRef = await db.collection('locations').add({
+                        name: locationName,
+                        latitude: lat,
+                        longitude: lng,
+                        imageUrl: '', // Add a default or empty image URL
+                    });
+
+                    console.log(`Location added with ID: ${newLocationRef.id}`);
+                    await loadLocations(); // Reload locations to update the UI
+                } catch (error) {
+                    console.error("Error adding location:", error);
+                    alert("An error occurred while adding the location. Please try again."); // User-facing error notification
+                }
             }
         }
 
