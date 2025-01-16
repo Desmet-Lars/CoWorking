@@ -88,8 +88,6 @@
             setupNavigationHandlers();
             setupAuthStateObserver();
             setupModalHandlers();
-            initializeMap();
-            setupFilters();
         }
 
         function setupNavigationHandlers() {
@@ -137,12 +135,10 @@
                         loginLink.removeEventListener('click', handleLogout); // Prevent multiple listeners
                         loginLink.addEventListener('click', handleLogout);
                     }
+                    initializeMap();
+                    setupFilters();
                 } else {
-                    if (loginLink) {
-                        loginLink.textContent = 'Login';
-                        loginLink.removeEventListener('click', handleLogin); // Prevent multiple listeners
-                        loginLink.addEventListener('click', handleLogin);
-                    }
+                    window.location.href = '../login';
                 }
             });
         }
@@ -150,11 +146,6 @@
         function handleLogout(e) {
             e.preventDefault();
             firebase.auth().signOut();
-        }
-
-        function handleLogin(e) {
-            e.preventDefault();
-            window.location.href = '../login';
         }
 
         function initializeMap() {
@@ -180,6 +171,8 @@
 
         async function loadLocations() {
             try {
+                if (!state.currentUser) return;
+
                 // Clear existing markers
                 state.markerClusterGroup.clearLayers();
                 state.markers.clear();
@@ -189,9 +182,9 @@
                 const searchQuery = document.getElementById('bucketlistSearch')?.value.toLowerCase() ?? '';
 
                 // Fetch visited locations
-                const visitSnapshot = state.currentUser ? await db.collection('userVisits')
+                const visitSnapshot = await db.collection('userVisits')
                     .where('userId', '==', state.currentUser.uid)
-                    .get() : { docs: [] };
+                    .get();
 
                 const visitedLocations = new Map(
                     visitSnapshot.docs.map(doc => [doc.data().locationId, doc.id])
@@ -359,10 +352,7 @@
 
         async function toggleVisited(locationId, visited) {
             try {
-                if (!state.currentUser) {
-                    alert("You need to be logged in to mark locations as visited.");
-                    return;
-                }
+                if (!state.currentUser) return;
 
                 const userVisitsRef = db.collection('userVisits');
 
@@ -401,11 +391,6 @@
 
         // Function to handle map click event
         async function onMapClick(e) {
-            if (!state.currentUser) {
-                alert("You need to be logged in to add locations.");
-                return;
-            }
-
             state.newLocation = e.latlng;
             document.getElementById('addLocationModal').style.display = 'block';
         }
@@ -450,13 +435,14 @@
         .modal {
             display: none;
             position: fixed;
-            z-index: 1000; /* Ensure the modal is on top */
+            z-index: 1;
             left: 0;
             top: 0;
             width: 100%;
             height: 100%;
             overflow: auto;
-            background-color: rgba(0, 0, 0, 0.4); /* Semi-transparent background */
+            background-color: rgb(0, 0, 0);
+            background-color: rgba(0, 0, 0, 0.4);
             padding-top: 60px;
         }
 
@@ -467,9 +453,6 @@
             border: 1px solid #888;
             width: 80%;
             max-width: 500px;
-            z-index: 1001; /* Ensure the modal content is on top */
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-            border-radius: 10px;
         }
 
         .close {
@@ -485,38 +468,7 @@
             text-decoration: none;
             cursor: pointer;
         }
-
-        .modal-content h2 {
-            margin-top: 0;
-        }
-
-        .modal-content label {
-            display: block;
-            margin: 10px 0 5px;
-        }
-
-        .modal-content input {
-            width: 100%;
-            padding: 8px;
-            margin-bottom: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-
-        .modal-content button {
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        .modal-content button:hover {
-            background-color: #45a049;
-        }
     </style>
-
 </body>
 
 </html>
