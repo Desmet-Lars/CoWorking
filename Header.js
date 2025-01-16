@@ -28,7 +28,7 @@
                             <li><a href="${relativeBase}map">BucketMap</a></li>
                             <li><a href="${relativeBase}aboutus">About Us</a></li>
                             <li><a href="${relativeBase}contactpage">Contact</a></li>
-                            <li><a id="loginLink" href="${relativeBase}login/">Login</a></li>
+                            <li><a id="loginLink" href="${relativeBase}login">Login</a></li>
                         </ul>
                     </nav>
                 </div>
