@@ -77,6 +77,11 @@ nav {
 
 }
 
+.about-us {
+  align-items: center;
+  text-align: center;
+}
+
 .aboutus_cont {
   display: flex;
   flex-direction: column;
@@ -256,9 +261,7 @@ footer p {
   flex-direction: column;
   flex-wrap: wrap;
   align-items: center;
-  margin-bottom: 3rem;
-  
-  
+  text-align: center;
 }
 
 .aboutus_cont {
