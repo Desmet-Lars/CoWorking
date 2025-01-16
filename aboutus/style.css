@@ -65,13 +65,13 @@ nav {
       gap: 2rem;
       list-style: none;
   }
-  a {
+  .icon {
       text-decoration: none;
       color: #4b5563;
       font-weight: 500;
       transition: color 0.2s;
   }
-  a:hover {
+  .icon:hover {
       color:#2563eb;
   }
 
@@ -161,7 +161,7 @@ span {
     margin: 15px 0;
 
 
-    a {
+    .icon {
       display: flex;
       text-decoration: none;
       align-items: center;
@@ -172,11 +172,11 @@ span {
   }
 }
 
-.aboutus li a ion-icon {
+.aboutus li .icon ion-icon {
   font-size: 1.6em;
   margin-right: 10px;
 }
-.aboutus li a:hover {
+.aboutus li .icon:hover {
   color: #2563eb;
 }
 
