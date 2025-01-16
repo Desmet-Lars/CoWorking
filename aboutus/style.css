@@ -65,13 +65,13 @@ nav {
       gap: 2rem;
       list-style: none;
   }
-  .icon {
+  a {
       text-decoration: none;
       color: #4b5563;
       font-weight: 500;
       transition: color 0.2s;
   }
-  .icon:hover {
+  a:hover {
       color:#2563eb;
   }
 
