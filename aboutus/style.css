@@ -251,6 +251,12 @@ footer p {
   }
 }
 
+.aboutus {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
 .aboutus_cont {
   display: flex;
   flex-direction: row;
