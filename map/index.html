@@ -144,6 +144,7 @@
                         loginLink.addEventListener('click', handleLogin);
                     }
                 }
+                loadLocations(); // Load locations regardless of authentication state
             });
         }
 
@@ -402,7 +403,7 @@
         // Function to handle map click event
         async function onMapClick(e) {
             if (!state.currentUser) {
-                alert("You need to be logged in to add locations.");
+                alert("You need to be logged in to add a location.");
                 return;
             }
 
@@ -490,30 +491,34 @@
             margin-top: 0;
         }
 
+        .modal-content form {
+            display: flex;
+            flex-direction: column;
+        }
+
         .modal-content label {
-            display: block;
-            margin: 10px 0 5px;
+            margin-top: 10px;
         }
 
         .modal-content input {
-            width: 100%;
-            padding: 8px;
-            margin-bottom: 10px;
+            padding: 10px;
+            margin-top: 5px;
             border: 1px solid #ccc;
-            border-radius: 4px;
+            border-radius: 5px;
         }
 
         .modal-content button {
-            background-color: #4CAF50;
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #007bff;
             color: white;
-            padding: 10px 20px;
             border: none;
-            border-radius: 4px;
+            border-radius: 5px;
             cursor: pointer;
         }
 
         .modal-content button:hover {
-            background-color: #45a049;
+            background-color: #0056b3;
         }
     </style>
 
