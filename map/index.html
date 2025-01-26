@@ -526,6 +526,25 @@
 
     </script>
     <style>
+        /* Add these z-index rules before existing styles */
+        .site-header {
+            position: relative;
+            z-index: 2000; /* Ensure header is above map controls */
+        }
+
+        #map {
+            z-index: 1; /* Keep map below header */
+        }
+
+        .leaflet-control-container {
+            z-index: 1000; /* Keep map controls below header but above map */
+        }
+
+        /* Modify modal styles to ensure proper z-index */
+        .modal {
+            z-index: 3000; /* Ensure modal is above everything */
+        }
+
         .modal {
             display: none;
             position: fixed;
