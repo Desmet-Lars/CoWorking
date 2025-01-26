@@ -193,16 +193,8 @@
 
             L.control.zoom({ position: 'topleft' }).addTo(state.map);
 
-            // Create a new cluster group
-            state.markerClusterGroup = L.markerClusterGroup({
-                removeOutsideVisibleBounds: true,
-                animate: true
-            });
-
-            // Add the cluster group to the map immediately
+            state.markerClusterGroup = L.markerClusterGroup();
             state.map.addLayer(state.markerClusterGroup);
-
-            // Add click event listener to the map
             state.map.on('click', onMapClick);
         }
 
@@ -276,48 +268,45 @@
 
             filteredLocations.sort((a, b) => a.name.localeCompare(b.name));
 
-            // Create all markers in a batch
-            const markers = filteredLocations.map(location => {
+            // Create markers and store valid ones
+            const validMarkers = [];
+
+            filteredLocations.forEach(location => {
                 const marker = createMarker(location);
                 if (marker) {
                     state.markers.set(location.id, marker);
+                    validMarkers.push(marker);
                     createBucketlistItem(location, bucketlistContainer);
                 }
-                return marker;
-            }).filter(Boolean);
-
-            // Add all markers to the cluster group at once
-            state.markerClusterGroup.addLayers(markers);
-        }
-
-        async function createMarker(location) {
-            const existingMarker = Array.from(state.markers.values()).find(marker => {
-                const latLng = marker.getLatLng();
-                return latLng.lat === location.data.latitude && latLng.lng === location.data.longitude;
             });
 
-            if (!existingMarker) {
-                // Determine marker color based on status
-                let markerColor;
-                if (location.isVisited) {
-                    markerColor = 'green';  // Visited locations
-                } else if (location.isInBucketlist) {
-                    markerColor = 'gold';   // Bucketlist items
-                } else {
-                    markerColor = 'blue';   // Regular locations
-                }
+            // Only add valid markers to the cluster group
+            if (validMarkers.length > 0) {
+                state.markerClusterGroup.addLayers(validMarkers);
+            }
+        }
 
+        function createMarker(location) {
+            // Remove async since we don't need it
+            const markerColor = location.isVisited ? 'green' :
+                               location.isInBucketlist ? 'gold' : 'blue';
+
+            try {
                 const marker = L.circleMarker(
                     [location.data.latitude, location.data.longitude],
                     {
                         color: markerColor,
-                        radius: 8,
-                        fillOpacity: 0.8
+                        fillColor: markerColor,
+                        fillOpacity: 0.8,
+                        radius: 8
                     }
                 );
 
                 setupMarkerInteractions(marker, location);
                 return marker;
+            } catch (error) {
+                console.error("Error creating marker:", error);
+                return null;
             }
         }
 
