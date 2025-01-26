@@ -10,12 +10,12 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
     <link rel="stylesheet" href="./map/style.css">
     <link rel="stylesheet" href="./map/spinner.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css">
-    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js" async></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js" defer></script>
 </head>
 
 <body>
@@ -82,9 +82,20 @@
         const db = firebase.firestore();
 
         // Event Listeners
-        document.addEventListener('DOMContentLoaded', initializeApp);
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeApp);
+        } else {
+            initializeApp();
+        }
 
         function initializeApp() {
+            // Ensure all required scripts are loaded before initializing
+            if (typeof L === 'undefined') {
+                console.log('Leaflet not loaded yet, retrying in 100ms...');
+                setTimeout(initializeApp, 100);
+                return;
+            }
+
             setupNavigationHandlers();
             setupAuthStateObserver();
             setupModalHandlers();
