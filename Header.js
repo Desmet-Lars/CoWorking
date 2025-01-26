@@ -37,8 +37,7 @@
 
         // Insert the header into the body
         document.body.insertAdjacentHTML("afterbegin", headerHTML);
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
+
         // Mobile menu toggle
         document.getElementById("menuToggle").addEventListener("click", () => {
             const nav = document.getElementById("mainNav");
