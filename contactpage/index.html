@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
     <link rel="stylesheet" href="./contactpage/style.css">
 </head>
 <body>
@@ -13,15 +15,15 @@
     <main>
         <div class="container">
             <div class="contact-container">
-                <form action="https://api.web3forms.com/submit" method="POST" class="contact-left">
+                <form id="contactForm" class="contact-left">
                     <div class="contact-left-title">
                         <h1>Get in touch</h1>
                     </div>
-                    <input type="hidden" name="access_key" value="70a26af6-fd23-414d-a60f-b3c8cfdd884d">
-                    <input type="text" name="name" placeholder="Your Name:" class="contact-inputs" required>
-                    <input type="email" name="email" placeholder="Your E-mail:" class="contact-inputs" required>
-                    <textarea name="Message" placeholder="Your Message" class="contact-inputs" required></textarea>
-                    <button type="submit" >Submit Message</button>
+                    <input type="text" id="name" placeholder="Your Name:" class="contact-inputs" required>
+                    <input type="email" id="email" placeholder="Your E-mail:" class="contact-inputs" required>
+                    <textarea id="message" placeholder="Your Message" class="contact-inputs" required></textarea>
+                    <button type="submit">Submit Message</button>
+                    <p id="statusMessage"></p>
                 </form>
             </div>
         </div>
@@ -30,6 +32,9 @@
         <div class="container">
             <p>&copy; 2025 BucketMap. No rights reserved.</p>
         </div>
-      </footer>
+    </footer>
+
+    <script src="./contactpage/submit.js"></script>
+
 </body>
 </html>
