@@ -211,16 +211,7 @@
                 const showUnvisited = document.getElementById('showUnvisited')?.checked ?? false;
                 const searchQuery = document.getElementById('bucketlistSearch')?.value.toLowerCase() ?? '';
 
-                // Fetch visited locations
-                const visitSnapshot = state.currentUser ? await db.collection('userVisits')
-                    .where('userId', '==', state.currentUser.uid)
-                    .get() : { docs: [] };
-
-                const visitedLocations = new Map(
-                    visitSnapshot.docs.map(doc => [doc.data().locationId, doc.id])
-                );
-
-                // Fetch bucketlist items
+                // First: Fetch bucketlist items to ensure they're available
                 const bucketlistSnapshot = state.currentUser ? await db.collection('bucketlist')
                     .where('userId', '==', state.currentUser.uid)
                     .get() : { docs: [] };
@@ -229,21 +220,31 @@
                     bucketlistSnapshot.docs.map(doc => doc.data().locationId)
                 );
 
-                // Fetch all locations
+                // Second: Fetch visited locations
+                const visitSnapshot = state.currentUser ? await db.collection('userVisits')
+                    .where('userId', '==', state.currentUser.uid)
+                    .get() : { docs: [] };
+
+                const visitedLocations = new Map(
+                    visitSnapshot.docs.map(doc => [doc.data().locationId, doc.id])
+                );
+
+                // Third: Fetch and process all locations
                 const locationsSnapshot = await db.collection('locations').get();
                 state.allLocations = locationsSnapshot.docs.map(doc => ({
                     id: doc.id,
                     name: doc.data().name,
                     isVisited: visitedLocations.has(doc.id),
-                    isInBucketlist: state.bucketlistItems.has(doc.id),
+                    isInBucketlist: state.bucketlistItems.has(doc.id), // This will now be correct
                     data: doc.data()
                 }));
 
+                // Now update the UI with the correct data
                 updateBucketlistUI(searchQuery, showAll, showBucketlist, showVisited, showUnvisited);
 
             } catch (error) {
                 console.error("Error loading locations:", error);
-                alert("An error occurred while loading locations. Please try again."); // User-facing error notification
+                alert("An error occurred while loading locations. Please try again.");
             }
         }
 
