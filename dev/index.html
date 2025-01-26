@@ -147,12 +147,50 @@
                 text-align: center;
             }
         }
+
+        .pin-auth {
+            max-width: 400px;
+            margin: 100px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .pin-input {
+            width: 200px;
+            padding: 10px;
+            margin: 20px 0;
+            font-size: 24px;
+            text-align: center;
+            letter-spacing: 4px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+        }
+
+        .pin-input:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+        }
+
+        .error-message {
+            color: #dc2626;
+            margin-top: 10px;
+            font-size: 0.9em;
+        }
     </style>
 </head>
 <body>
     <div class="dev-container">
         <div id="content">
-            <h1>Loading...</h1>
+            <div class="pin-auth">
+                <h2>Developer Console Access</h2>
+                <input type="password" id="pinInput" class="pin-input" maxlength="4" placeholder="Enter PIN">
+                <button class="button" onclick="checkPin()">Access Console</button>
+                <p id="errorMessage" class="error-message"></p>
+            </div>
         </div>
     </div>
 
@@ -162,22 +200,35 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // Check authorization
-        firebase.auth().onAuthStateChanged(async (user) => {
-            if (user && user.email === 'Larsdesmet001@gmail.com') {
+        // PIN authentication
+        let isAuthenticated = false;
+        const CORRECT_PIN = '3451';
+
+        function checkPin() {
+            const pin = document.getElementById('pinInput').value;
+            const errorMessage = document.getElementById('errorMessage');
+
+            if (pin === CORRECT_PIN) {
+                isAuthenticated = true;
                 loadDevConsole();
             } else {
-                document.getElementById('content').innerHTML = `
-                    <div class="unauthorized">
-                        <h1>Unauthorized Access</h1>
-                        <p>You need to be logged in as an admin to access this page.</p>
-                        <button class="button" onclick="window.location.href='../login'">Go to Login</button>
-                    </div>
-                `;
+                errorMessage.textContent = 'Incorrect PIN. Please try again.';
+                document.getElementById('pinInput').value = '';
+            }
+        }
+
+        // Add enter key support for PIN input
+        document.getElementById('pinInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                checkPin();
             }
         });
 
         async function loadDevConsole() {
+            if (!isAuthenticated) {
+                return;
+            }
+
             const contentDiv = document.getElementById('content');
             contentDiv.innerHTML = `
                 <div class="dev-header">
