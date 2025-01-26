@@ -27,12 +27,20 @@
                 <h3>Filters</h3>
                 <div class="filter-options">
                     <label>
+                        <input type="checkbox" id="showAll" checked>
+                        Show All Locations
+                    </label>
+                    <label>
                         <input type="checkbox" id="showBucketlist" checked>
-                        Show Bucketlist Items
+                        Show My Bucketlist
                     </label>
                     <label>
                         <input type="checkbox" id="showVisited" checked>
                         Show Visited Places
+                    </label>
+                    <label>
+                        <input type="checkbox" id="showUnvisited">
+                        Show Unvisited Places
                     </label>
                 </div>
             </div>
@@ -74,7 +82,8 @@
             allLocations: [],
             currentUser: null,
             errorMessage: null, // Added to manage error messages
-            newLocation: null // Added to store new location coordinates
+            newLocation: null, // Added to store new location coordinates
+            bucketlistItems: new Set(), // Add this new property
         };
 
         // Initialize app
@@ -196,8 +205,10 @@
                 state.markerClusterGroup.clearLayers();
                 state.markers.clear();
 
+                const showAll = document.getElementById('showAll')?.checked ?? true;
                 const showBucketlist = document.getElementById('showBucketlist')?.checked ?? true;
                 const showVisited = document.getElementById('showVisited')?.checked ?? true;
+                const showUnvisited = document.getElementById('showUnvisited')?.checked ?? false;
                 const searchQuery = document.getElementById('bucketlistSearch')?.value.toLowerCase() ?? '';
 
                 // Fetch visited locations
@@ -209,16 +220,26 @@
                     visitSnapshot.docs.map(doc => [doc.data().locationId, doc.id])
                 );
 
+                // Fetch bucketlist items
+                const bucketlistSnapshot = state.currentUser ? await db.collection('bucketlist')
+                    .where('userId', '==', state.currentUser.uid)
+                    .get() : { docs: [] };
+
+                state.bucketlistItems = new Set(
+                    bucketlistSnapshot.docs.map(doc => doc.data().locationId)
+                );
+
                 // Fetch all locations
                 const locationsSnapshot = await db.collection('locations').get();
                 state.allLocations = locationsSnapshot.docs.map(doc => ({
                     id: doc.id,
                     name: doc.data().name,
                     isVisited: visitedLocations.has(doc.id),
+                    isInBucketlist: state.bucketlistItems.has(doc.id),
                     data: doc.data()
                 }));
 
-                updateBucketlistUI(searchQuery, showBucketlist, showVisited, visitedLocations);
+                updateBucketlistUI(searchQuery, showAll, showBucketlist, showVisited, showUnvisited);
 
             } catch (error) {
                 console.error("Error loading locations:", error);
@@ -226,15 +247,20 @@
             }
         }
 
-        function updateBucketlistUI(searchQuery, showBucketlist, showVisited, visitedLocations) {
+        function updateBucketlistUI(searchQuery, showAll, showBucketlist, showVisited, showUnvisited) {
             const bucketlistContainer = document.getElementById('bucketlistItems');
             if (!bucketlistContainer) return;
 
             bucketlistContainer.innerHTML = '';
 
-            const filteredLocations = state.allLocations.filter(location =>
-                location.name.toLowerCase().includes(searchQuery)
-            );
+            const filteredLocations = state.allLocations.filter(location => {
+                const matchesSearch = location.name.toLowerCase().includes(searchQuery);
+                const matchesFilters = showAll ||
+                    (showBucketlist && location.isInBucketlist) ||
+                    (showVisited && location.isVisited) ||
+                    (showUnvisited && !location.isVisited);
+                return matchesSearch && matchesFilters;
+            });
 
             // Sort locations alphabetically by name
             filteredLocations.sort((a, b) => a.name.localeCompare(b.name));
@@ -242,12 +268,10 @@
             const uniqueLocations = new Map(); // Use a Map to track unique locations
 
             filteredLocations.forEach(location => {
-                if ((location.isVisited && showVisited) || (!location.isVisited && showBucketlist)) {
-                    if (!uniqueLocations.has(location.id)) { // Check for uniqueness
-                        uniqueLocations.set(location.id, location); // Add to unique locations
-                        createMarker(location);
-                        createBucketlistItem(location, bucketlistContainer);
-                    }
+                if (!uniqueLocations.has(location.id)) { // Check for uniqueness
+                    uniqueLocations.set(location.id, location); // Add to unique locations
+                    createMarker(location);
+                    createBucketlistItem(location, bucketlistContainer);
                 }
             });
 
@@ -312,11 +336,15 @@
                     <div class="popup-image-container">
                         <img src="${location.data.imageUrl}" alt="${location.data.name}">
                     </div>
-                    <p class="popup-status ${location.isVisited ? 'visited' : 'bucketlist'}">
-                        ${location.isVisited ? '✓ Visited' : '○ On Bucketlist'}
+                    <p class="popup-status">
+                        ${location.isVisited ? '✓ Visited' : '○ Not Visited'}<br>
+                        ${location.isInBucketlist ? '★ In Bucketlist' : '☆ Not in Bucketlist'}
                     </p>
                     <button class="popup-button" onclick="toggleVisited('${location.id}', ${!location.isVisited})">
                         Mark as ${location.isVisited ? 'Not Visited' : 'Visited'}
+                    </button>
+                    <button class="popup-button" onclick="toggleBucketlist('${location.id}', ${!location.isInBucketlist})">
+                        ${location.isInBucketlist ? 'Remove from Bucketlist' : 'Add to Bucketlist'}
                     </button>
                 </div>
             `;
@@ -361,8 +389,10 @@
         }
 
         function setupFilters() {
+            document.getElementById('showAll')?.addEventListener('change', loadLocations);
             document.getElementById('showBucketlist')?.addEventListener('change', loadLocations);
             document.getElementById('showVisited')?.addEventListener('change', loadLocations);
+            document.getElementById('showUnvisited')?.addEventListener('change', loadLocations);
             document.getElementById('bucketlistSearch')?.addEventListener('input', loadLocations);
         }
 
@@ -394,6 +424,35 @@
             } catch (error) {
                 console.error("Error updating location:", error);
                 alert("An error occurred while updating the location. Please try again."); // User-facing error notification
+            }
+        }
+
+        async function toggleBucketlist(locationId, add) {
+            try {
+                if (!state.currentUser) {
+                    alert("You need to be logged in to manage your bucketlist.");
+                    return;
+                }
+
+                if (add) {
+                    await db.collection('bucketlist').add({
+                        userId: state.currentUser.uid,
+                        locationId: locationId,
+                        addedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                } else {
+                    const bucketlistQuery = await db.collection('bucketlist')
+                        .where('userId', '==', state.currentUser.uid)
+                        .where('locationId', '==', locationId)
+                        .get();
+
+                    await Promise.all(bucketlistQuery.docs.map(doc => doc.ref.delete()));
+                }
+
+                await loadLocations();
+            } catch (error) {
+                console.error("Error updating bucketlist:", error);
+                alert("An error occurred while updating your bucketlist. Please try again.");
             }
         }
 
@@ -526,6 +585,21 @@
         }
 
         .modal-content button:hover {
+            background-color: #0056b3;
+        }
+
+        .popup-button {
+            margin: 5px 0;
+            width: 100%;
+            padding: 8px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .popup-button:hover {
             background-color: #0056b3;
         }
     </style>
