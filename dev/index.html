@@ -189,6 +189,27 @@
             margin-top: 10px;
             font-size: 0.9em;
         }
+
+        /* Add these new styles */
+        .search-bar {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+        }
     </style>
 </head>
 <body>
@@ -244,11 +265,36 @@
                     <h1>Developer Console</h1>
                     <button class="button" onclick="window.location.href='../map'">Back to Map</button>
                 </div>
+                <div class="search-bar">
+                    <input type="text"
+                        id="searchInput"
+                        class="search-input"
+                        placeholder="Search locations by name..."
+                        oninput="filterLocations()">
+                </div>
                 <div class="location-list" id="locationList"></div>
             `;
 
             await loadLocations();
         }
+
+        // Add filterLocations function
+        function filterLocations() {
+            const searchQuery = document.getElementById('searchInput').value.toLowerCase();
+            const locationCards = document.querySelectorAll('.location-card');
+
+            locationCards.forEach(card => {
+                const locationName = card.querySelector('h3').textContent.toLowerCase();
+                if (locationName.includes(searchQuery)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        // Update loadLocations to store the locations globally
+        let allLocations = [];
 
         async function loadLocations() {
             const locationList = document.getElementById('locationList');
@@ -256,9 +302,16 @@
 
             try {
                 const snapshot = await db.collection('locations').get();
-                snapshot.forEach(doc => {
-                    const location = doc.data();
-                    const card = createLocationCard(doc.id, location);
+                allLocations = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+
+                // Sort locations alphabetically by name
+                allLocations.sort((a, b) => a.name.localeCompare(b.name));
+
+                allLocations.forEach(location => {
+                    const card = createLocationCard(location.id, location);
                     locationList.appendChild(card);
                 });
             } catch (error) {
