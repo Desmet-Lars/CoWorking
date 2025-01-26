@@ -192,8 +192,15 @@
             }).addTo(state.map);
 
             L.control.zoom({ position: 'topleft' }).addTo(state.map);
-            state.markerClusterGroup = L.markerClusterGroup();
-            loadLocations();
+
+            // Create a new cluster group
+            state.markerClusterGroup = L.markerClusterGroup({
+                removeOutsideVisibleBounds: true,
+                animate: true
+            });
+
+            // Add the cluster group to the map immediately
+            state.map.addLayer(state.markerClusterGroup);
 
             // Add click event listener to the map
             state.map.on('click', onMapClick);
@@ -254,6 +261,10 @@
 
             bucketlistContainer.innerHTML = '';
 
+            // Clear all existing markers first
+            state.markerClusterGroup.clearLayers();
+            state.markers.clear();
+
             const filteredLocations = state.allLocations.filter(location => {
                 const matchesSearch = location.name.toLowerCase().includes(searchQuery);
                 const matchesFilters = showAll ||
@@ -263,20 +274,20 @@
                 return matchesSearch && matchesFilters;
             });
 
-            // Sort locations alphabetically by name
             filteredLocations.sort((a, b) => a.name.localeCompare(b.name));
 
-            const uniqueLocations = new Map(); // Use a Map to track unique locations
-
-            filteredLocations.forEach(location => {
-                if (!uniqueLocations.has(location.id)) { // Check for uniqueness
-                    uniqueLocations.set(location.id, location); // Add to unique locations
-                    createMarker(location);
+            // Create all markers in a batch
+            const markers = filteredLocations.map(location => {
+                const marker = createMarker(location);
+                if (marker) {
+                    state.markers.set(location.id, marker);
                     createBucketlistItem(location, bucketlistContainer);
                 }
-            });
+                return marker;
+            }).filter(Boolean);
 
-            state.map?.addLayer(state.markerClusterGroup);
+            // Add all markers to the cluster group at once
+            state.markerClusterGroup.addLayers(markers);
         }
 
         async function createMarker(location) {
@@ -306,8 +317,7 @@
                 );
 
                 setupMarkerInteractions(marker, location);
-                state.markerClusterGroup.addLayer(marker);
-                state.markers.set(location.id, marker);
+                return marker;
             }
         }
 
