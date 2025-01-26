@@ -5,11 +5,10 @@
     <title>About us</title>
     <link
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
-    rel="stylesheet"
-  />
+    rel="stylesheet">
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-  <link rel="stylesheet" href="./aboutus/style.css" />
+  <link rel="stylesheet" href="./aboutus/style.css">
 </head>
 <body>
   <header>
@@ -222,55 +221,55 @@
       <p>&copy; 2025 BucketMap. No rights reserved.</p>
     </div>
   </footer>
-  
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyChQQiUKzxdvITadpBhMM4rryaNL4hLNaY",
+      authDomain: "buckmap-83956.firebaseapp.com",
+      projectId: "buckmap-83956",
+      storageBucket: "buckmap-83956.firebasestorage.app",
+      messagingSenderId: "809697568507",
+      appId: "1:809697568507:web:b2e70b0f7a04837063f25e",
+      measurementId: "G-4JD9LL21HT",
+    };
+
+    firebase.initializeApp(firebaseConfig);
+
+    // Mobile responsive menu
+    document.getElementById("menuToggle").addEventListener("click", () => {
+      const nav = document.getElementById("mainNav");
+      nav.classList.toggle("nav-closed");
+    });
+
+    // Check authtentication
+    firebase.auth().onAuthStateChanged((user) => {
+      const loginLink = document.getElementById("loginLink");
+      if (user) {
+        loginLink.textContent = "Logout";
+        loginLink.addEventListener("click", (e) => {
+          e.preventDefault();
+          firebase.auth().signOut();
+        });
+      } else {
+        loginLink.textContent = "Login";
+      }
+    });
+</script>
+
+  <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+  <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+  <script>
+    document.querySelectorAll('.card').forEach((card) => {
+    const toggle = card.querySelector('.toggle');
+    toggle.onclick = function () {
+    card.classList.toggle('active');
+    };
+    });
+/*const card =document.querySelector('.card');
+const cardtoggle =document.querySelector('.toggle');
+cardtoggle.onclick = function(){
+  card.classList.toggle('active');
+}*/
+</script>
 </body>
-<script>
-      const firebaseConfig = {
-        apiKey: "AIzaSyChQQiUKzxdvITadpBhMM4rryaNL4hLNaY",
-        authDomain: "buckmap-83956.firebaseapp.com",
-        projectId: "buckmap-83956",
-        storageBucket: "buckmap-83956.firebasestorage.app",
-        messagingSenderId: "809697568507",
-        appId: "1:809697568507:web:b2e70b0f7a04837063f25e",
-        measurementId: "G-4JD9LL21HT",
-      };
-
-      firebase.initializeApp(firebaseConfig);
-
-      // Mobile menu toggle
-      document.getElementById("menuToggle").addEventListener("click", () => {
-        const nav = document.getElementById("mainNav");
-        nav.classList.toggle("nav-closed");
-      });
-
-      // Check authentication state
-      firebase.auth().onAuthStateChanged((user) => {
-        const loginLink = document.getElementById("loginLink");
-        if (user) {
-          loginLink.textContent = "Logout";
-          loginLink.addEventListener("click", (e) => {
-            e.preventDefault();
-            firebase.auth().signOut();
-          });
-        } else {
-          loginLink.textContent = "Login";
-        }
-      });
-</script>
-<script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
-<script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
-<script>
-  document.querySelectorAll('.card').forEach((card) => {
-  const toggle = card.querySelector('.toggle');
-  toggle.onclick = function () {
-    card.classList.toggle('active');
-  };
-});
-
-  /*const card =document.querySelector('.card');
-  const cardtoggle =document.querySelector('.toggle');
-  cardtoggle.onclick = function(){
-    card.classList.toggle('active');
-  }*/
-</script>
 </html>
