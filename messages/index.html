@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Messages Dashboard</title>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <style>
+        .messages-container {
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .message-card {
+            background: #f5f5f5;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .message-date {
+            color: #666;
+            font-size: 0.9em;
+        }
+        .delete-btn {
+            background: #ff4444;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .delete-btn:hover {
+            background: #cc0000;
+        }
+        .no-access {
+            text-align: center;
+            margin-top: 50px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <script src="../Header.js"></script>
+    <div class="messages-container">
+        <h1>Messages Dashboard</h1>
+        <div id="messagesList"></div>
+    </div>
+
+    <script>
+        const db = firebase.firestore();
+        const messagesRef = db.collection('messages');
+
+        // Check if user is admin (you'll need to set up admin roles in your database)
+        async function checkIsAdmin(userId) {
+            try {
+                const adminDoc = await db.collection('admins').doc(userId).get();
+                return adminDoc.exists;
+            } catch (error) {
+                console.error("Error checking admin status:", error);
+                return false;
+            }
+        }
+
+        // Format date
+        function formatDate(timestamp) {
+            if (!timestamp) return 'No date';
+            return new Date(timestamp.seconds * 1000).toLocaleString();
+        }
+
+        // Delete message
+        async function deleteMessage(messageId) {
+            try {
+                await messagesRef.doc(messageId).delete();
+                loadMessages(); // Reload messages after deletion
+            } catch (error) {
+                console.error("Error deleting message:", error);
+                alert("Error deleting message");
+            }
+        }
+
+        // Load messages
+        async function loadMessages() {
+            const messagesList = document.getElementById('messagesList');
+            messagesList.innerHTML = '';
+
+            const user = firebase.auth().currentUser;
+            if (!user) {
+                messagesList.innerHTML = '<div class="no-access">Please log in to view messages.</div>';
+                return;
+            }
+
+            const isAdmin = await checkIsAdmin(user.uid);
+            if (!isAdmin) {
+                messagesList.innerHTML = '<div class="no-access">You do not have permission to view messages.</div>';
+                return;
+            }
+
+            try {
+                const snapshot = await messagesRef.orderBy('timestamp', 'desc').get();
+                snapshot.forEach(doc => {
+                    const message = doc.data();
+                    const messageEl = document.createElement('div');
+                    messageEl.className = 'message-card';
+                    messageEl.innerHTML = `
+                        <div class="message-header">
+                            <strong>${message.name}</strong>
+                            <button class="delete-btn" onclick="deleteMessage('${doc.id}')">Delete</button>
+                        </div>
+                        <div>${message.email}</div>
+                        <div class="message-date">${formatDate(message.timestamp)}</div>
+                        <div style="margin-top: 10px;">${message.message}</div>
+                    `;
+                    messagesList.appendChild(messageEl);
+                });
+
+                if (snapshot.empty) {
+                    messagesList.innerHTML = '<div>No messages found.</div>';
+                }
+            } catch (error) {
+                console.error("Error loading messages:", error);
+                messagesList.innerHTML = '<div>Error loading messages.</div>';
+            }
+        }
+
+        // Auth state observer
+        firebase.auth().onAuthStateChanged((user) => {
+            loadMessages();
+        });
+    </script>
+</body>
+</html>
