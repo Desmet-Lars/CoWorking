@@ -10,9 +10,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="./signup/style.css">
 </head>
-
 <body>
-    <script src="../../Header.js"></script>
+    <header>
+        <script src="../../Header.js"></script>
+    </header>
     <main>
         <div class="login-container">
             <h2>Sign Up for BucketMap</h2>
@@ -34,7 +35,11 @@
             <p>Already have an account? <a href="../">Login</a></p>
         </div>
     </main>
-
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 BucketMap. No rights reserved.</p>
+        </div>
+    </footer>
     <script>
 
         document.getElementById('signupForm').addEventListener('submit', async (e) => {
@@ -65,7 +70,5 @@
             nav.classList.toggle('nav-closed');
         });
     </script>
-
 </body>
-
 </html>
