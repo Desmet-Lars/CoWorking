@@ -403,7 +403,7 @@
                 <div class="dev-header">
                     <h1>Developer Console</h1>
                     <div>
-                        <button class="button" onclick="window.location.href='../messages'">View Messages</button>
+                        <button class="button" onclick="grantMessagesAccess()">View Messages</button>
                         <button class="button add-location-button" onclick="showAddLocationForm()">Add New Location</button>
                         <button class="button" onclick="window.location.href='../map'">Back to Map</button>
                     </div>
@@ -435,6 +435,12 @@
 
             await loadLocations();
             await updateStats();
+        }
+
+        // Add this new function
+        function grantMessagesAccess() {
+            sessionStorage.setItem('devConsoleAccess', 'granted');
+            window.location.href = '../messages';
         }
 
         // Add filterLocations function

@@ -98,10 +98,15 @@
             }
 
             const isAdmin = await checkIsAdmin(user.uid);
-            if (!isAdmin) {
-                messagesList.innerHTML = '<div class="no-access">You do not have permission to view messages.</div>';
+            const hasDevAccess = sessionStorage.getItem('devConsoleAccess') === 'granted';
+
+            if (!isAdmin || !hasDevAccess) {
+                messagesList.innerHTML = '<div class="no-access">You do not have permission to view messages. Access is only granted through the Developer Console.</div>';
                 return;
             }
+
+            // Clear the access token after successful verification
+            sessionStorage.removeItem('devConsoleAccess');
 
             try {
                 const snapshot = await messagesRef.orderBy('timestamp', 'desc').get();
