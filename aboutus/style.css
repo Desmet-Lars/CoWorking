@@ -221,7 +221,7 @@ footer p {
 }
 
 
-@media (min-width: 768px) {
+/*@media (min-width: 768px) {
   .menu-toggle {
       display: block;
   }
@@ -271,4 +271,4 @@ footer p {
   justify-content: space-around;
   gap: 2rem;
   align-items: center;
-} 
+} */
