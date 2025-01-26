@@ -14,43 +14,97 @@
             margin: 0 auto;
         }
         .message-card {
-            background: #f5f5f5;
-            padding: 15px;
-            margin: 10px 0;
+            background: white;
+            padding: 20px;
+            margin: 15px 0;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        .message-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
         }
         .message-header {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 10px;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
         }
         .message-date {
             color: #666;
             font-size: 0.9em;
+            margin: 5px 0;
+        }
+        .message-email {
+            color: #2563eb;
+            margin: 5px 0;
+        }
+        .message-content {
+            margin-top: 10px;
+            line-height: 1.5;
         }
         .delete-btn {
-            background: #ff4444;
+            background: #dc2626;
             color: white;
             border: none;
-            padding: 5px 10px;
-            border-radius: 4px;
+            padding: 8px 16px;
+            border-radius: 6px;
             cursor: pointer;
+            transition: background-color 0.2s;
         }
         .delete-btn:hover {
-            background: #cc0000;
+            background: #b91c1c;
         }
         .no-access {
             text-align: center;
             margin-top: 50px;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .no-access h2 {
+            color: #dc2626;
+            margin-bottom: 15px;
+        }
+        .no-access p {
             color: #666;
+            margin-bottom: 20px;
+        }
+        .back-button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: background-color 0.2s;
+        }
+        .back-button:hover {
+            background: #1d4ed8;
+        }
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
         }
     </style>
 </head>
 <body>
     <script src="../Header.js"></script>
     <div class="messages-container">
-        <h1>Messages Dashboard</h1>
+        <div class="page-header">
+            <h1>Messages Dashboard</h1>
+            <a href="../dev" class="back-button">Back to Dev Console</a>
+        </div>
         <div id="messagesList"></div>
     </div>
 
@@ -91,25 +145,25 @@
             const messagesList = document.getElementById('messagesList');
             messagesList.innerHTML = '';
 
-            const user = firebase.auth().currentUser;
-            if (!user) {
-                messagesList.innerHTML = '<div class="no-access">Please log in to view messages.</div>';
-                return;
-            }
-
-            const isAdmin = await checkIsAdmin(user.uid);
             const hasDevAccess = sessionStorage.getItem('devConsoleAccess') === 'granted';
 
-            if (!isAdmin || !hasDevAccess) {
-                messagesList.innerHTML = '<div class="no-access">You do not have permission to view messages. Access is only granted through the Developer Console.</div>';
+            if (!hasDevAccess) {
+                messagesList.innerHTML = `
+                    <div class="no-access">
+                        <h2>Access Denied</h2>
+                        <p>You must access this page through the Developer Console.</p>
+                        <a href="../dev" class="back-button">Go to Developer Console</a>
+                    </div>`;
                 return;
             }
-
-            // Clear the access token after successful verification
-            sessionStorage.removeItem('devConsoleAccess');
 
             try {
                 const snapshot = await messagesRef.orderBy('timestamp', 'desc').get();
+                if (snapshot.empty) {
+                    messagesList.innerHTML = '<div class="no-access"><h2>No Messages</h2><p>There are no messages to display.</p></div>';
+                    return;
+                }
+
                 snapshot.forEach(doc => {
                     const message = doc.data();
                     const messageEl = document.createElement('div');
@@ -119,19 +173,15 @@
                             <strong>${message.name}</strong>
                             <button class="delete-btn" onclick="deleteMessage('${doc.id}')">Delete</button>
                         </div>
-                        <div>${message.email}</div>
+                        <div class="message-email">${message.email}</div>
                         <div class="message-date">${formatDate(message.timestamp)}</div>
-                        <div style="margin-top: 10px;">${message.message}</div>
+                        <div class="message-content">${message.message}</div>
                     `;
                     messagesList.appendChild(messageEl);
                 });
-
-                if (snapshot.empty) {
-                    messagesList.innerHTML = '<div>No messages found.</div>';
-                }
             } catch (error) {
                 console.error("Error loading messages:", error);
-                messagesList.innerHTML = '<div>Error loading messages.</div>';
+                messagesList.innerHTML = '<div class="no-access"><h2>Error</h2><p>Failed to load messages.</p></div>';
             }
         }
 

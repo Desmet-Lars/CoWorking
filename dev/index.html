@@ -439,8 +439,12 @@
 
         // Add this new function
         function grantMessagesAccess() {
-            sessionStorage.setItem('devConsoleAccess', 'granted');
-            window.location.href = '../messages';
+            if (isAuthenticated) {
+                sessionStorage.setItem('devConsoleAccess', 'granted');
+                window.location.href = '../messages';
+            } else {
+                alert('Please enter the correct PIN first to access messages.');
+            }
         }
 
         // Add filterLocations function
