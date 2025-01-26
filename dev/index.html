@@ -210,6 +210,112 @@
             border-color: #2563eb;
             box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
         }
+
+        .stats-panel {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: 15px;
+            background: #f8fafc;
+            border-radius: 6px;
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .stat-label {
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .filters-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .add-location-button {
+            background: #10b981;
+        }
+
+        .add-location-button:hover {
+            background: #059669;
+        }
+
+        .sort-select {
+            padding: 8px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            background: white;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+            margin-right: 5px;
+        }
+
+        .status-active {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-bucket {
+            background: #fef9c3;
+            color: #854d0e;
+        }
+
+        /* Add to existing styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+        }
+
+        .modal-content input {
+            width: 100%;
+            margin: 10px 0;
+            padding: 8px;
+            border: 1px solid #e5e7eb;
+            border-radius: 4px;
+        }
+
+        .close {
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -221,6 +327,21 @@
                 <button class="button" onclick="checkPin()">Access Console</button>
                 <p id="errorMessage" class="error-message"></p>
             </div>
+        </div>
+    </div>
+
+    <!-- Add this modal HTML right after the dev-container div -->
+    <div id="addLocationModal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="closeAddModal">&times;</span>
+            <h2>Add New Location</h2>
+            <form id="addLocationForm">
+                <input type="text" id="newLocationName" placeholder="Location Name" required>
+                <input type="text" id="newLocationImage" placeholder="Image URL" required>
+                <input type="number" id="newLocationLat" placeholder="Latitude" step="any" required>
+                <input type="number" id="newLocationLng" placeholder="Longitude" step="any" required>
+                <button type="submit" class="button">Add Location</button>
+            </form>
         </div>
     </div>
 
@@ -263,19 +384,38 @@
             contentDiv.innerHTML = `
                 <div class="dev-header">
                     <h1>Developer Console</h1>
-                    <button class="button" onclick="window.location.href='../map'">Back to Map</button>
+                    <div>
+                        <button class="button add-location-button" onclick="showAddLocationForm()">Add New Location</button>
+                        <button class="button" onclick="window.location.href='../map'">Back to Map</button>
+                    </div>
                 </div>
-                <div class="search-bar">
+
+                <div class="stats-panel" id="statsPanel">
+                    <!-- Stats will be inserted here -->
+                </div>
+
+                <div class="filters-bar">
                     <input type="text"
                         id="searchInput"
                         class="search-input"
-                        placeholder="Search locations by name..."
-                        oninput="filterLocations()">
+                        placeholder="Search locations by name...">
+
+                    <select id="sortSelect" class="sort-select" onchange="sortLocations()">
+                        <option value="name">Sort by Name</option>
+                        <option value="visits">Sort by Visits</option>
+                        <option value="bucketlist">Sort by Bucketlist Adds</option>
+                        <option value="newest">Newest First</option>
+                        <option value="oldest">Oldest First</option>
+                    </select>
+
+                    <button class="button" onclick="exportLocations()">Export Data</button>
                 </div>
+
                 <div class="location-list" id="locationList"></div>
             `;
 
             await loadLocations();
+            await updateStats();
         }
 
         // Add filterLocations function
@@ -296,44 +436,59 @@
         // Update loadLocations to store the locations globally
         let allLocations = [];
 
+        // Update loadLocations function to handle the correct data structure
         async function loadLocations() {
             const locationList = document.getElementById('locationList');
             locationList.innerHTML = '';
 
             try {
                 const snapshot = await db.collection('locations').get();
-                allLocations = snapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data()
+                allLocations = await Promise.all(snapshot.docs.map(async doc => {
+                    const data = doc.data();
+                    const [visits, bucketlists] = await Promise.all([
+                        db.collection('userVisits').where('locationId', '==', doc.id).get(),
+                        db.collection('bucketlist').where('locationId', '==', doc.id).get()
+                    ]);
+
+                    return {
+                        id: doc.id,
+                        name: data.name,
+                        imageUrl: data.imageUrl,
+                        latitude: data.latitude,
+                        longitude: data.longitude,
+                        timestamp: data.timestamp || firebase.firestore.Timestamp.now(),
+                        visitsCount: visits.size,
+                        bucketlistCount: bucketlists.size
+                    };
                 }));
 
-                // Sort locations alphabetically by name
+                // Initial sort by name
                 allLocations.sort((a, b) => a.name.localeCompare(b.name));
-
-                allLocations.forEach(location => {
-                    const card = createLocationCard(location.id, location);
-                    locationList.appendChild(card);
-                });
+                updateLocationsList(allLocations);
             } catch (error) {
                 console.error("Error loading locations:", error);
                 alert("Error loading locations");
             }
         }
 
+        // Update createLocationCard to use the correct data structure
         function createLocationCard(id, location) {
             const div = document.createElement('div');
             div.className = 'location-card';
             div.innerHTML = `
-                <img src="${location.imageUrl}" alt="${location.name}" onerror="this.src='https://via.placeholder.com/300'">
+                <img src="${location.imageUrl}" alt="${location.name}"
+                    onerror="this.onerror=null; this.src='https://placehold.co/300x200/e2e8f0/1e40af?text=${encodeURIComponent(location.name)}'"
+                >
                 <div class="location-info">
                     <h3>${location.name}</h3>
                     <div class="location-coordinates">
                         <div>Latitude: ${location.latitude}</div>
                         <div>Longitude: ${location.longitude}</div>
+                        <div>Added: ${location.timestamp.toDate().toLocaleDateString()}</div>
                     </div>
                     <div class="button-group">
-
                         <button class="button" onclick="toggleEdit('${id}')">Edit</button>
+                        <button class="button" onclick="viewDetails('${id}')">Details</button>
                         <button class="button delete-button" onclick="deleteLocation('${id}')">Delete</button>
                     </div>
                 </div>
@@ -353,6 +508,7 @@
             form.style.display = form.style.display === 'none' ? 'block' : 'none';
         }
 
+        // Update the location update function
         async function updateLocation(id) {
             try {
                 const name = document.getElementById(`name-${id}`).value;
@@ -364,7 +520,8 @@
                     name,
                     imageUrl,
                     latitude,
-                    longitude
+                    longitude,
+                    // Don't update timestamp on edit
                 });
 
                 alert('Location updated successfully');
@@ -402,6 +559,154 @@
                 alert("Error deleting location");
             }
         }
+
+        async function updateStats() {
+            const statsPanel = document.getElementById('statsPanel');
+
+            try {
+                const [totalLocations, totalVisits, totalBucketlist] = await Promise.all([
+                    db.collection('locations').get(),
+                    db.collection('userVisits').get(),
+                    db.collection('bucketlist').get()
+                ]);
+
+                const uniqueVisitors = new Set(totalVisits.docs.map(doc => doc.data().userId)).size;
+
+                statsPanel.innerHTML = `
+                    <div class="stat-card">
+                        <div class="stat-number">${totalLocations.size}</div>
+                        <div class="stat-label">Total Locations</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${totalVisits.size}</div>
+                        <div class="stat-label">Total Visits</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${totalBucketlist.size}</div>
+                        <div class="stat-label">Bucketlist Adds</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${uniqueVisitors}</div>
+                        <div class="stat-label">Unique Visitors</div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error("Error updating stats:", error);
+            }
+        }
+
+        // Update the sortLocations function and add updateLocationsList
+        // Update sortLocations function to handle timestamp correctly
+        function sortLocations() {
+            const sortBy = document.getElementById('sortSelect').value;
+            const currentLocations = [...allLocations];
+
+            switch(sortBy) {
+                case 'name':
+                    currentLocations.sort((a, b) => a.name.localeCompare(b.name));
+                    break;
+                case 'visits':
+                    currentLocations.sort((a, b) => b.visitsCount - a.visitsCount);
+                    break;
+                case 'bucketlist':
+                    currentLocations.sort((a, b) => b.bucketlistCount - a.bucketlistCount);
+                    break;
+                case 'newest':
+                    currentLocations.sort((a, b) => b.timestamp.seconds - a.timestamp.seconds);
+                    break;
+                case 'oldest':
+                    currentLocations.sort((a, b) => a.timestamp.seconds - b.timestamp.seconds);
+                    break;
+            }
+
+            updateLocationsList(currentLocations);
+        }
+
+        function updateLocationsList(locations) {
+            const locationList = document.getElementById('locationList');
+            locationList.innerHTML = '';
+
+            locations.forEach(location => {
+                const card = createLocationCard(location.id, location);
+                locationList.appendChild(card);
+            });
+        }
+
+        async function viewDetails(id) {
+            try {
+                const [visits, bucketlists] = await Promise.all([
+                    db.collection('userVisits').where('locationId', '==', id).get(),
+                    db.collection('bucketlist').where('locationId', '==', id).get()
+                ]);
+
+                alert(`
+                    Location Statistics:
+                    Total Visits: ${visits.size}
+                    In Bucketlists: ${bucketlists.size}
+                    Last Visit: ${visits.size > 0 ? new Date(visits.docs[0].data().visitedAt.toDate()).toLocaleDateString() : 'Never'}
+                `);
+            } catch (error) {
+                console.error("Error fetching details:", error);
+                alert("Error loading location details");
+            }
+        }
+
+        function exportLocations() {
+            const data = JSON.stringify(allLocations, null, 2);
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `locations-export-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Add these functions to your existing script
+        function showAddLocationForm() {
+            document.getElementById('addLocationModal').style.display = 'block';
+        }
+
+        // Add this after your existing initialization code
+        document.addEventListener('DOMContentLoaded', () => {
+            const modal = document.getElementById('addLocationModal');
+            const closeBtn = document.getElementById('closeAddModal');
+            const form = document.getElementById('addLocationForm');
+
+            closeBtn.onclick = () => {
+                modal.style.display = 'none';
+            };
+
+            window.onclick = (event) => {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            };
+
+            form.onsubmit = async (e) => {
+                e.preventDefault();
+                try {
+                    const newLocation = {
+                        name: document.getElementById('newLocationName').value,
+                        imageUrl: document.getElementById('newLocationImage').value,
+                        latitude: parseFloat(document.getElementById('newLocationLat').value),
+                        longitude: parseFloat(document.getElementById('newLocationLng').value),
+                        timestamp: firebase.firestore.Timestamp.now()
+                    };
+
+                    await db.collection('locations').add(newLocation);
+                    modal.style.display = 'none';
+                    form.reset();
+                    await loadLocations();
+                    alert('Location added successfully!');
+                } catch (error) {
+                    console.error('Error adding location:', error);
+                    alert('Error adding location. Please try again.');
+                }
+            };
+        });
     </script>
 </body>
 </html>
