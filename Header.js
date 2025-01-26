@@ -1,4 +1,4 @@
-// Determine the relative base path
+        // Determine the relative base path
         const currentPathDepth = window.location.pathname.split('/').filter(Boolean).length;
         const relativeBase = "../".repeat(currentPathDepth);
 
@@ -36,12 +36,7 @@
         `;
 
         // Insert the header into the body
-        const mainElement = document.querySelector('main');
-        if (mainElement) {
-            mainElement.insertAdjacentHTML("beforebegin", headerHTML);
-        } else {
-            document.body.insertAdjacentHTML("afterbegin", headerHTML);
-        }
+        document.body.insertAdjacentHTML("afterbegin", headerHTML);
 
         // Mobile menu toggle
         document.getElementById("menuToggle").addEventListener("click", () => {

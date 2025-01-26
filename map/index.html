@@ -526,49 +526,6 @@
 
     </script>
     <style>
-        /* Update z-index and positioning rules */
-        .site-header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 9999;
-            background: white;
-        }
-
-        main {
-            position: relative;
-            z-index: 1;
-            margin-top: 60px; /* Adjust based on your header height */
-        }
-
-        #map {
-            z-index: 1;
-        }
-
-        #mainNav {
-            z-index: 10000;
-        }
-
-        .leaflet-control-container {
-            z-index: 1000;
-        }
-
-        .modal {
-            z-index: 20000;
-        }
-
-        /* Ensure menu is visible on mobile */
-        @media (max-width: 768px) {
-            #mainNav {
-                background: white;
-            }
-
-            .nav-open #mainNav {
-                display: block;
-            }
-        }
-
         /* Add these z-index rules before existing styles */
         .site-header {
             position: relative;
