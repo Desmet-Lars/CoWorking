@@ -284,12 +284,23 @@
                 return latLng.lat === location.data.latitude && latLng.lng === location.data.longitude;
             });
 
-            if (!existingMarker) { // Only create a new marker if one doesn't already exist
+            if (!existingMarker) {
+                // Determine marker color based on status
+                let markerColor;
+                if (location.isVisited) {
+                    markerColor = 'green';  // Visited locations
+                } else if (location.isInBucketlist) {
+                    markerColor = 'gold';   // Bucketlist items
+                } else {
+                    markerColor = 'blue';   // Regular locations
+                }
+
                 const marker = L.circleMarker(
                     [location.data.latitude, location.data.longitude],
                     {
-                        color: location.isVisited ? 'green' : 'blue',
-                        radius: 8
+                        color: markerColor,
+                        radius: 8,
+                        fillOpacity: 0.8
                     }
                 );
 
