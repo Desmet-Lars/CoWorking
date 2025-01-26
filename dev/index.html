@@ -42,6 +42,24 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
+        .dev-header div {
+            display: flex;
+            gap: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .dev-header {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+
+            .dev-header div {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
+
         .location-list {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -385,6 +403,7 @@
                 <div class="dev-header">
                     <h1>Developer Console</h1>
                     <div>
+                        <button class="button" onclick="window.location.href='../messages'">View Messages</button>
                         <button class="button add-location-button" onclick="showAddLocationForm()">Add New Location</button>
                         <button class="button" onclick="window.location.href='../map'">Back to Map</button>
                     </div>

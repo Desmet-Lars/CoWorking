@@ -1,4 +1,4 @@
-        // Determine the relative base path
+// Determine the relative base path
         const currentPathDepth = window.location.pathname.split('/').filter(Boolean).length;
         const relativeBase = "../".repeat(currentPathDepth);
 
@@ -45,9 +45,17 @@
         });
 
         // Check authentication state
-        firebase.auth().onAuthStateChanged((user) => {
+        firebase.auth().onAuthStateChanged(async (user) => {
             const loginLink = document.getElementById("loginLink");
+            const messagesLink = document.getElementById("messagesLink");
+
             if (user) {
+                // Check if user is admin
+                const isAdmin = await checkIsAdmin(user.uid);
+                if (messagesLink) {
+                    messagesLink.style.display = isAdmin ? 'block' : 'none';
+                }
+
                 loginLink.textContent = "Logout";
                 loginLink.href = "#";
                 loginLink.addEventListener("click", (e) => {
@@ -55,7 +63,21 @@
                     firebase.auth().signOut();
                 });
             } else {
+                if (messagesLink) {
+                    messagesLink.style.display = 'none';
+                }
                 loginLink.textContent = "Login";
                 loginLink.href = `${relativeBase}login/`;
             }
         });
+
+        // Add this function to check admin status
+        async function checkIsAdmin(userId) {
+            try {
+                const adminDoc = await firebase.firestore().collection('admins').doc(userId).get();
+                return adminDoc.exists;
+            } catch (error) {
+                console.error("Error checking admin status:", error);
+                return false;
+            }
+        }
