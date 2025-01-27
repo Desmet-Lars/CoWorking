@@ -111,7 +111,11 @@
             initializeMap();
             setupFilters();
         }
-
+    // Mobile responsive menu
+    document.getElementById("menuToggle").addEventListener("click", () => {
+      const nav = document.getElementById("mainNav");
+      nav.classList.toggle("nav-closed");
+    });
         function setupNavigationHandlers() {
             const menuToggle = document.getElementById('menuToggle');
             const controlsToggle = document.getElementById('controlsToggle');
