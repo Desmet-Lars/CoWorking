@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BucketMap - Map</title>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
@@ -115,58 +115,7 @@
         function setupNavigationHandlers() {
             const menuToggle = document.getElementById('menuToggle');
             const controlsToggle = document.getElementById('controlsToggle');
-            const nav = document.getElementById('mainNav');
-            const controls = document.getElementById('controls');
 
-            // Add touch event handling
-            document.addEventListener('touchstart', handleTouchStart);
-            document.addEventListener('touchmove', handleTouchMove);
-
-            let xDown = null;
-            let yDown = null;
-
-            function handleTouchStart(evt) {
-                xDown = evt.touches[0].clientX;
-                yDown = evt.touches[0].clientY;
-            }
-
-            function handleTouchMove(evt) {
-                if (!xDown || !yDown) return;
-
-                const xUp = evt.touches[0].clientX;
-                const yUp = evt.touches[0].clientY;
-                const xDiff = xDown - xUp;
-                const yDiff = yDown - yUp;
-
-                if (Math.abs(xDiff) > Math.abs(yDiff)) {
-                    if (xDiff > 0) {
-                        // Swiped left
-                        controls?.classList.add('controls-closed');
-                    } else {
-                        // Swiped right
-                        nav?.classList.remove('nav-closed');
-                    }
-                }
-
-                xDown = null;
-                yDown = null;
-            }
-
-            // Close nav when clicking outside
-            document.addEventListener('click', (e) => {
-                if (!nav?.contains(e.target) && e.target !== menuToggle) {
-                    nav?.classList.add('nav-closed');
-                }
-            });
-
-            // Close controls when clicking outside
-            document.addEventListener('click', (e) => {
-                if (!controls?.contains(e.target) && e.target !== controlsToggle) {
-                    controls?.classList.add('controls-closed');
-                }
-            });
-
-            // ...existing event listeners...
             menuToggle?.addEventListener('click', () => {
                 const nav = document.getElementById('mainNav');
                 const zoomControls = document.querySelector('.leaflet-control-zoom');
