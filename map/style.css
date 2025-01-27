@@ -1,4 +1,4 @@
-        * {
+* {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
@@ -153,37 +153,41 @@
         @media (max-width: 768px) {
             .menu-toggle {
                 display: block;
+                z-index: 1001;
             }
 
             nav {
                 position: fixed;
-                top: 70px;
-                /* Height of header */
+                top: 0;
                 left: 0;
                 right: 0;
+                bottom: 0;
                 background: white;
                 padding: 1rem;
                 box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
                 transition: transform 0.3s ease;
-                height: calc(100vh - 70px);
-                overflow-y: auto;
-                z-index: 900;
+                z-index: 1000;
+                transform: translateX(-100%);
+            }
+
+            .site-header {
+                position: relative;
+                z-index: 1001;
+            }
+
+            nav ul {
+                margin-top: 70px; /* Add space for header */
+                flex-direction: column;
+                gap: 1.5rem;
+                padding: 1rem;
             }
 
             nav.nav-closed {
                 transform: translateX(-100%);
             }
 
-            nav ul {
-                flex-direction: column;
-                gap: 1.5rem;
-                padding: 1rem;
-            }
-
-            nav a {
-                display: block;
-                padding: 0.5rem;
-                font-size: 1.2rem;
+            nav:not(.nav-closed) {
+                transform: translateX(0);
             }
 
             .controls-toggle {

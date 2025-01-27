@@ -38,10 +38,25 @@
         // Insert the header into the body
         document.body.insertAdjacentHTML("afterbegin", headerHTML);
 
-        // Mobile menu toggle
-        document.getElementById("menuToggle").addEventListener("click", () => {
+        // Mobile menu toggle - replace the existing event listener
+        document.getElementById("menuToggle").addEventListener("click", (e) => {
+            e.stopPropagation(); // Prevent event bubbling
             const nav = document.getElementById("mainNav");
             nav.classList.toggle("nav-closed");
+
+            // Add click outside to close
+            const closeMenu = (event) => {
+                if (!nav.contains(event.target) && !event.target.matches('#menuToggle')) {
+                    nav.classList.add("nav-closed");
+                    document.removeEventListener('click', closeMenu);
+                }
+            };
+
+            if (!nav.classList.contains("nav-closed")) {
+                setTimeout(() => {
+                    document.addEventListener('click', closeMenu);
+                }, 0);
+            }
         });
 
         // Check authentication state
@@ -50,6 +65,7 @@
 
             if (user) {
                 loginLink.textContent = "Logout";
+
                 loginLink.href = "#";
                 loginLink.addEventListener("click", (e) => {
                     e.preventDefault();
