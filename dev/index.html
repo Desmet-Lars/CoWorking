@@ -154,23 +154,21 @@
                     return;
                 }
 
-                // If not in cache, load from Firestore
+                // If not in cache, load from Firestore with batched queries
                 const snapshot = await db.collection('locations')
                     .orderBy('name')
-                    .limit(100) // Limit the initial load
+                    .limit(100)
                     .get();
 
-                const locationsPromises = snapshot.docs.map(async doc => {
+                allLocations = await Promise.all(snapshot.docs.map(async doc => {
                     const data = doc.data();
-                    // Batch the stats queries
+                    // Get visits and bucketlist counts
                     const [visits, bucketlists] = await Promise.all([
                         db.collection('userVisits')
                             .where('locationId', '==', doc.id)
-                            .count()
                             .get(),
                         db.collection('bucketlist')
                             .where('locationId', '==', doc.id)
-                            .count()
                             .get()
                     ]);
 
@@ -181,21 +179,22 @@
                         latitude: data.latitude,
                         longitude: data.longitude,
                         timestamp: data.timestamp || firebase.firestore.Timestamp.now(),
-                        visitsCount: visits.data().count,
-                        bucketlistCount: bucketlists.data().count
+                        visitsCount: visits.size,
+                        bucketlistCount: bucketlists.size
                     };
-                });
-
-                allLocations = await Promise.all(locationsPromises);
+                }));
 
                 // Save to cache
                 saveToCache('locations', allLocations);
+
+                // Sort by name initially
+                allLocations.sort((a, b) => a.name.localeCompare(b.name));
 
                 // Update UI
                 updateLocationsList(allLocations);
             } catch (error) {
                 console.error("Error loading locations:", error);
-                alert("Error loading locations");
+                locationList.innerHTML = '<div class="error-message">Error loading locations. Please try again.</div>';
             }
         }
 
