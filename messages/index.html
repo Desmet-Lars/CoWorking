@@ -22,8 +22,28 @@
     <script>
         const db = firebase.firestore();
         const messagesRef = db.collection('messages');
+        const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
 
-        // Remove checkIsAdmin function since we're not using it
+        // Add cache functions
+        function saveToCache(key, data) {
+            const cacheData = {
+                timestamp: Date.now(),
+                data: data
+            };
+            localStorage.setItem(key, JSON.stringify(cacheData));
+        }
+
+        function getFromCache(key) {
+            const cached = localStorage.getItem(key);
+            if (!cached) return null;
+
+            const { timestamp, data } = JSON.parse(cached);
+            if (Date.now() - timestamp > CACHE_DURATION) {
+                localStorage.removeItem(key);
+                return null;
+            }
+            return data;
+        }
 
         // Format date
         function formatDate(timestamp) {
@@ -31,24 +51,25 @@
             return new Date(timestamp.seconds * 1000).toLocaleString();
         }
 
-        // Delete message
+        // Update delete message function to handle cache
         async function deleteMessage(messageId) {
             try {
                 await messagesRef.doc(messageId).delete();
-                loadMessages(); // Reload messages after deletion
+                // Clear cache to force refresh
+                localStorage.removeItem('messages');
+                loadMessages();
             } catch (error) {
                 console.error("Error deleting message:", error);
                 alert("Error deleting message");
             }
         }
 
-        // Load messages
+        // Update load messages function to use caching
         async function loadMessages() {
             const messagesList = document.getElementById('messagesList');
             messagesList.innerHTML = '';
 
             const hasDevAccess = sessionStorage.getItem('devConsoleAccess') === 'granted';
-
             if (!hasDevAccess) {
                 messagesList.innerHTML = `
                     <div class="no-access">
@@ -60,20 +81,36 @@
             }
 
             try {
-                const snapshot = await messagesRef.orderBy('timestamp', 'desc').get();
-                if (snapshot.empty) {
+                // Try to get messages from cache first
+                let messages = getFromCache('messages');
+
+                if (!messages) {
+                    const snapshot = await messagesRef
+                        .orderBy('timestamp', 'desc')
+                        .limit(50) // Limit the number of messages loaded
+                        .get();
+
+                    messages = snapshot.docs.map(doc => ({
+                        id: doc.id,
+                        ...doc.data()
+                    }));
+
+                    // Save to cache
+                    saveToCache('messages', messages);
+                }
+
+                if (messages.length === 0) {
                     messagesList.innerHTML = '<div class="no-access"><h2>No Messages</h2><p>There are no messages to display.</p></div>';
                     return;
                 }
 
-                snapshot.forEach(doc => {
-                    const message = doc.data();
+                messages.forEach(message => {
                     const messageEl = document.createElement('div');
                     messageEl.className = 'message-card';
                     messageEl.innerHTML = `
                         <div class="message-header">
                             <strong>${message.name}</strong>
-                            <button class="delete-btn" onclick="deleteMessage('${doc.id}')">Delete</button>
+                            <button class="delete-btn" onclick="deleteMessage('${message.id}')">Delete</button>
                         </div>
                         <div class="message-email">${message.email}</div>
                         <div class="message-date">${formatDate(message.timestamp)}</div>
@@ -83,6 +120,7 @@
                 });
             } catch (error) {
                 console.error("Error loading messages:", error);
+
                 messagesList.innerHTML = '<div class="no-access"><h2>Error</h2><p>Failed to load messages.</p></div>';
             }
         }

@@ -146,12 +146,32 @@
             locationList.innerHTML = '';
 
             try {
-                const snapshot = await db.collection('locations').get();
-                allLocations = await Promise.all(snapshot.docs.map(async doc => {
+                // Try to get from cache first
+                const cachedLocations = getFromCache('locations');
+                if (cachedLocations) {
+                    allLocations = cachedLocations;
+                    updateLocationsList(allLocations);
+                    return;
+                }
+
+                // If not in cache, load from Firestore
+                const snapshot = await db.collection('locations')
+                    .orderBy('name')
+                    .limit(100) // Limit the initial load
+                    .get();
+
+                const locationsPromises = snapshot.docs.map(async doc => {
                     const data = doc.data();
+                    // Batch the stats queries
                     const [visits, bucketlists] = await Promise.all([
-                        db.collection('userVisits').where('locationId', '==', doc.id).get(),
-                        db.collection('bucketlist').where('locationId', '==', doc.id).get()
+                        db.collection('userVisits')
+                            .where('locationId', '==', doc.id)
+                            .count()
+                            .get(),
+                        db.collection('bucketlist')
+                            .where('locationId', '==', doc.id)
+                            .count()
+                            .get()
                     ]);
 
                     return {
@@ -161,18 +181,43 @@
                         latitude: data.latitude,
                         longitude: data.longitude,
                         timestamp: data.timestamp || firebase.firestore.Timestamp.now(),
-                        visitsCount: visits.size,
-                        bucketlistCount: bucketlists.size
+                        visitsCount: visits.data().count,
+                        bucketlistCount: bucketlists.data().count
                     };
-                }));
+                });
 
-                // Initial sort by name
-                allLocations.sort((a, b) => a.name.localeCompare(b.name));
+                allLocations = await Promise.all(locationsPromises);
+
+                // Save to cache
+                saveToCache('locations', allLocations);
+
+                // Update UI
                 updateLocationsList(allLocations);
             } catch (error) {
                 console.error("Error loading locations:", error);
                 alert("Error loading locations");
             }
+        }
+
+        // Add cache utility functions
+        function saveToCache(key, data) {
+            const cacheData = {
+                timestamp: Date.now(),
+                data: data
+            };
+            localStorage.setItem(key, JSON.stringify(cacheData));
+        }
+
+        function getFromCache(key) {
+            const cached = localStorage.getItem(key);
+            if (!cached) return null;
+
+            const { timestamp, data } = JSON.parse(cached);
+            if (Date.now() - timestamp > 5 * 60 * 1000) { // 5 minutes cache
+                localStorage.removeItem(key);
+                return null;
+            }
+            return data;
         }
 
         // Update createLocationCard to use the correct data structure
