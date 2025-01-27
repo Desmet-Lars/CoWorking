@@ -198,11 +198,19 @@
             }
         }
 
-        // Add cache utility functions
+        // Update the cache utility functions to handle timestamps
         function saveToCache(key, data) {
+            const processedData = data.map(item => ({
+                ...item,
+                timestamp: {
+                    seconds: item.timestamp.seconds,
+                    nanoseconds: item.timestamp.nanoseconds
+                }
+            }));
+
             const cacheData = {
                 timestamp: Date.now(),
-                data: data
+                data: processedData
             };
             localStorage.setItem(key, JSON.stringify(cacheData));
         }
@@ -216,11 +224,29 @@
                 localStorage.removeItem(key);
                 return null;
             }
-            return data;
+
+            // Restore Firestore Timestamp functionality
+            return data.map(item => ({
+                ...item,
+                timestamp: {
+                    toDate: () => new Date(item.timestamp.seconds * 1000),
+                    seconds: item.timestamp.seconds,
+                    nanoseconds: item.timestamp.nanoseconds
+                }
+            }));
         }
 
-        // Update createLocationCard to use the correct data structure
+        // Update createLocationCard to handle both Firestore Timestamp and our cached version
         function createLocationCard(id, location) {
+            const formatDate = (timestamp) => {
+                if (timestamp?.toDate) {
+                    return timestamp.toDate().toLocaleDateString();
+                } else if (timestamp?.seconds) {
+                    return new Date(timestamp.seconds * 1000).toLocaleDateString();
+                }
+                return 'No date';
+            };
+
             const div = document.createElement('div');
             div.className = 'location-card';
             div.innerHTML = `
@@ -232,7 +258,7 @@
                     <div class="location-coordinates">
                         <div>Latitude: ${location.latitude}</div>
                         <div>Longitude: ${location.longitude}</div>
-                        <div>Added: ${location.timestamp.toDate().toLocaleDateString()}</div>
+                        <div>Added: ${formatDate(location.timestamp)}</div>
                     </div>
                     <div class="button-group">
                         <button class="button" onclick="toggleEdit('${id}')">Edit</button>
